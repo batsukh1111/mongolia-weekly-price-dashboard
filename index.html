@@ -428,6 +428,37 @@
       background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
     }
     .stat-pill b { color: var(--text); font-weight: 700; }
+
+    /* Download menu */
+    .dl-wrap { position: relative; }
+    .dl-menu {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      min-width: 260px; z-index: 200;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow); padding: 0.4rem;
+    }
+    .dl-wrap.open .dl-menu { display: block; }
+    .dl-menu button {
+      display: block; width: 100%; text-align: left;
+      border: none; background: transparent; color: var(--text);
+      font: inherit; font-size: 0.82rem; font-weight: 600;
+      padding: 0.55rem 0.7rem; border-radius: 8px; cursor: pointer;
+    }
+    .dl-menu button:hover { background: var(--surface3); }
+    .dl-menu button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .dl-menu .dl-sep {
+      height: 1px; background: var(--border); margin: 0.35rem 0.4rem;
+    }
+    .dl-menu .dl-hint {
+      font-size: 0.68rem; color: var(--muted); padding: 0.25rem 0.7rem 0.45rem;
+      font-weight: 500; line-height: 1.35;
+    }
+    .btn.dl-btn {
+      background: linear-gradient(135deg, #059669, #0d9488);
+      border-color: transparent; color: #fff;
+    }
+    .btn.dl-btn:hover { filter: brightness(1.08); }
+    .btn.sm { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
   </style>
 </head>
 <body>
@@ -452,6 +483,23 @@
     </div>
     <div class="header-meta">
       <span id="lastUpdated">Сүүлийн өгөгдөл: —</span>
+      <div class="dl-wrap" id="dlWrap">
+        <button class="btn dl-btn" id="btnDlMenu" type="button" title="Excel / CSV татах" disabled>
+          ⬇ Excel татах
+        </button>
+        <div class="dl-menu" id="dlMenu" role="menu">
+          <div class="dl-hint">Нэвтрэх шаардлагагүй · одоогийн амьд өгөгдөл · хэн ч татаж болно</div>
+          <button type="button" data-export="full-xlsx">📊 Бүх өгөгдөл (Excel .xlsx)</button>
+          <button type="button" data-export="ub-xlsx">🏙 Зөвхөн Улаанбаатар (Excel)</button>
+          <button type="button" data-export="aimag-xlsx">🗺 Зөвхөн аймгууд (Excel)</button>
+          <div class="dl-sep"></div>
+          <button type="button" data-export="full-csv">📄 CSV — УБ + аймаг (zip биш, 2 файл)</button>
+          <button type="button" data-export="ub-csv">📄 CSV — Улаанбаатар</button>
+          <button type="button" data-export="aimag-csv">📄 CSV — Аймгууд</button>
+          <div class="dl-sep"></div>
+          <button type="button" data-export="current">📍 Одоогийн харагдац (Excel)</button>
+        </div>
+      </div>
       <button class="btn" id="btnRefresh" title="Дахин татах">↻ Шинэчлэх</button>
       <a href="https://www.1212.mn" target="_blank" rel="noopener">Эх сурвалж</a>
     </div>
@@ -672,7 +720,10 @@
           </div>
         </div>
         <div class="card">
-          <h2>Долоо хоногийн түүх <span class="hint" id="ubHistHint"></span></h2>
+          <h2>Долоо хоногийн түүх
+            <span class="hint" id="ubHistHint"></span>
+            <button type="button" class="btn sm dl-btn" id="btnDlUbHist">⬇ Excel</button>
+          </h2>
           <div class="table-wrap" style="max-height:380px">
             <table class="data" id="ubHistTable">
               <thead>
@@ -716,7 +767,11 @@
         </div>
         <div class="stat-pills" id="ubTablePills"></div>
         <div class="card">
-          <h2>Бүх бүтээгдэхүүн — олон хугацааны харьцуулалт <span class="hint">мөр дээр дарж дэлгэрэнгүй рүү шилжинэ</span></h2>
+          <h2>Бүх бүтээгдэхүүн — олон хугацааны харьцуулалт
+            <span class="hint">мөр дээр дарж дэлгэрэнгүй рүү ·
+              <button type="button" class="btn sm dl-btn" id="btnDlUbTable">⬇ Excel</button>
+            </span>
+          </h2>
           <div class="table-wrap" style="max-height:620px">
             <table class="data" id="ubAllTable">
               <thead>
@@ -808,7 +863,9 @@
         </div>
       </div>
       <div class="card">
-        <h2>Аймгуудын жагсаалт</h2>
+        <h2>Аймгуудын жагсаалт
+          <button type="button" class="btn sm dl-btn" id="btnDlAimag">⬇ Excel</button>
+        </h2>
         <div class="table-wrap">
           <table class="data" id="aimagTable">
             <thead>
@@ -862,7 +919,9 @@
           <div class="chart-box lg"><canvas id="cmpChart"></canvas></div>
         </div>
         <div class="card">
-          <h2>УБ харьцуулалт — нийтлэг бүтээгдэхүүнүүд</h2>
+          <h2>УБ харьцуулалт — нийтлэг бүтээгдэхүүнүүд
+            <button type="button" class="btn sm dl-btn" id="btnDlCompare">⬇ Excel</button>
+          </h2>
           <div class="table-wrap">
             <table class="data" id="cmpTable">
               <thead>
@@ -926,10 +985,11 @@
         <a href="https://data.1212.mn/" target="_blank" rel="noopener">PxWeb API</a>.
         Хуудас нээгдэх / «Шинэчлэх» дарах бүрт шууд API-аас татна — 1212.mn шинэчлэгдэхэд дашбоард автоматаар дагана.
       </div>
-      <div>HTML · Chart.js · GitHub Pages-д бэлэн</div>
+      <div>HTML · Chart.js · Leaflet · Excel таталт · GitHub Pages</div>
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
   (() => {
@@ -2813,9 +2873,398 @@
       });
     }
 
+    // ─── Excel / CSV export (client-side, public, no login) ───
+    function fileStamp() {
+      const d = ubWeeks[0]?.name || aimagWeeks[0]?.name || new Date().toISOString().slice(0, 10);
+      return String(d).replace(/[^\d-]/g, "") || "export";
+    }
+
+    function hasExportData() {
+      return ubProducts.length > 0 || aimagProducts.length > 0;
+    }
+
+    function setExportEnabled(on) {
+      const btn = $("btnDlMenu");
+      if (btn) btn.disabled = !on;
+      ["btnDlUbTable", "btnDlUbHist", "btnDlAimag", "btnDlCompare"].forEach((id) => {
+        const el = $(id);
+        if (el) el.disabled = !on;
+      });
+    }
+
+    function downloadBlob(filename, blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    /** CSV with UTF-8 BOM so Excel opens Mongolian correctly */
+    function downloadCsv(filename, rows) {
+      const esc = (v) => {
+        if (v == null || v === "") return "";
+        const s = String(v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      };
+      const body = rows.map((r) => r.map(esc).join(",")).join("\r\n");
+      const bom = "\uFEFF";
+      downloadBlob(filename, new Blob([bom + body], { type: "text/csv;charset=utf-8" }));
+    }
+
+    function sheetFromAoA(aoa) {
+      if (typeof XLSX === "undefined") throw new Error("XLSX library not loaded");
+      return XLSX.utils.aoa_to_sheet(aoa);
+    }
+
+    function downloadXlsx(filename, sheets) {
+      // sheets: { "SheetName": [[...], ...] }
+      if (typeof XLSX === "undefined") {
+        // Fallback: first sheet as CSV
+        const first = Object.keys(sheets)[0];
+        downloadCsv(filename.replace(/\.xlsx$/i, ".csv"), sheets[first] || []);
+        alert("Excel сан ачаалагдаагүй тул CSV болгон татлаа. Интернэт холболтоо шалгаад дахин оролдоно уу.");
+        return;
+      }
+      const wb = XLSX.utils.book_new();
+      for (const [name, aoa] of Object.entries(sheets)) {
+        const safe = String(name).slice(0, 31) || "Sheet";
+        const ws = sheetFromAoA(aoa);
+        // rough column widths
+        const cols = [];
+        const width = Math.min(20, (aoa[0] || []).length);
+        for (let c = 0; c < width; c++) {
+          let max = 10;
+          for (let r = 0; r < Math.min(aoa.length, 80); r++) {
+            const cell = aoa[r]?.[c];
+            if (cell != null) max = Math.max(max, String(cell).length);
+          }
+          cols.push({ wch: Math.min(40, max + 2) });
+        }
+        ws["!cols"] = cols;
+        XLSX.utils.book_append_sheet(wb, ws, safe);
+      }
+      XLSX.writeFile(wb, filename);
+    }
+
+    function metaSheet() {
+      return [
+        ["Талбар", "Утга"],
+        ["Гарчиг", "7 хоногийн үнийн дашбоард — ҮСХ 1212.mn"],
+        ["Сүүлийн 7 хоног (УБ)", ubWeeks[0]?.name || ""],
+        ["Сүүлийн 7 хоног (аймаг)", aimagWeeks[0]?.name || ""],
+        ["УБ бүтээгдэхүүн", ubProducts.length],
+        ["Аймгийн бүтээгдэхүүн", aimagProducts.length],
+        ["Аймаг", AIMAG_CODES.length],
+        ["Ачаалсан 7-хоног (УБ)", ubWeeks.length],
+        ["Ачаалсан 7-хоног (аймаг)", aimagWeeks.length],
+        ["УБ эх", "DT_NSO_0600_001V4"],
+        ["Аймаг эх", "DT_NSO_0300_010V5"],
+        ["API", "https://data.1212.mn/"],
+        ["Вэб", "https://batsukh1111.github.io/mongolia-weekly-price-dashboard/"],
+        ["Татсан огноо (UTC)", new Date().toISOString()],
+        ["Нэгж", "Төгрөг (₮)"],
+        ["Тэмдэглэл", "Хэн ч нэвтрэлгүйгээр татаж болно. Өгөгдөл ҮСХ-ийн PxWeb API-аас амьдаар татагдсан."],
+      ];
+    }
+
+    function buildUbLatestAoA() {
+      const rows = [["Бүтээгдэхүүн", "Код", "Ангилал", "Үнэ_сүүлийн", "Огноо_сүүлийн", "Үнэ_өмнөх", "Огноо_өмнөх", "Зөрүү_₮", "Өөрчлөлт_%_7х", "Өөрчлөлт_%_4x7х", "Өөрчлөлт_%_12x7х"]];
+      const w0 = ubWeeks[0]?.name || "";
+      const w1 = ubWeeks[1]?.name || "";
+      for (const r of ubProductRows()) {
+        rows.push([
+          r.name,
+          r.code,
+          ubCatOf(r.name).label,
+          r.price,
+          w0,
+          r.prev,
+          w1,
+          r.diff,
+          r.pct != null ? Number(r.pct.toFixed(3)) : null,
+          r.pct4 != null ? Number(r.pct4.toFixed(3)) : null,
+          r.pct12 != null ? Number(r.pct12.toFixed(3)) : null,
+        ]);
+      }
+      return rows;
+    }
+
+    function buildUbSeriesAoA() {
+      // Wide: product | date1 | date2 | ...
+      const weeks = ubWeeks.slice(); // newest first labels as columns
+      const header = ["Бүтээгдэхүүн", "Код", ...weeks.map((w) => w.name)];
+      const rows = [header];
+      for (const p of ubProducts) {
+        rows.push([
+          p.name,
+          p.code,
+          ...weeks.map((w) => ubData[p.code]?.[w.code] ?? null),
+        ]);
+      }
+      return rows;
+    }
+
+    function buildUbLongAoA() {
+      const rows = [["Бүтээгдэхүүн", "Код", "Огноо", "Үнэ_₮"]];
+      for (const p of ubProducts) {
+        for (const w of ubWeeks) {
+          const v = ubData[p.code]?.[w.code];
+          if (v == null) continue;
+          rows.push([p.name, p.code, w.name, v]);
+        }
+      }
+      return rows;
+    }
+
+    function buildAimagLatestAoA() {
+      const w0 = aimagWeeks[0];
+      const w1 = aimagWeeks[1];
+      const rows = [["Бүтээгдэхүүн", "Бүтээгдэхүүн_код", "Аймаг", "Аймаг_код", "Үнэ_сүүлийн", "Огноо_сүүлийн", "Үнэ_өмнөх", "Огноо_өмнөх", "Зөрүү_₮", "Өөрчлөлт_%"]];
+      for (const p of aimagProducts) {
+        for (const code of AIMAG_CODES) {
+          const a = aimagData[p.code]?.[code]?.[w0?.code] ?? null;
+          const b = aimagData[p.code]?.[code]?.[w1?.code] ?? null;
+          const diff = a != null && b != null ? a - b : null;
+          const pct = pctChange(a, b);
+          rows.push([
+            p.name,
+            p.code,
+            aimagName(code),
+            code,
+            a,
+            w0?.name || "",
+            b,
+            w1?.name || "",
+            diff,
+            pct != null ? Number(pct.toFixed(3)) : null,
+          ]);
+        }
+      }
+      return rows;
+    }
+
+    function buildAimagLongAoA() {
+      const rows = [["Бүтээгдэхүүн", "Бүтээгдэхүүн_код", "Аймаг", "Аймаг_код", "Огноо", "Үнэ_₮"]];
+      for (const p of aimagProducts) {
+        for (const code of AIMAG_CODES) {
+          for (const w of aimagWeeks) {
+            const v = aimagData[p.code]?.[code]?.[w.code];
+            if (v == null) continue;
+            rows.push([p.name, p.code, aimagName(code), code, w.name, v]);
+          }
+        }
+      }
+      return rows;
+    }
+
+    function buildCompareAoA() {
+      const weekA = aimagWeeks[0]?.code;
+      const weekLabel = aimagWeeks[0]?.name;
+      const weekU = ubWeeks.find((w) => w.name === weekLabel)?.code || ubWeeks[0]?.code;
+      const rows = [["Бүтээгдэхүүн", "УБ_үнэ", "Аймаг_дундаж", "Зөрүү_%_УБ_vs_дундаж", "Хамгийн_хямд_аймаг", "Хамгийн_хямд_үнэ", "Хамгийн_үнэтэй_аймаг", "Хамгийн_үнэтэй_үнэ", "Огноо"]];
+      for (const s of SHARED) {
+        const prices = AIMAG_CODES.map((c) => ({
+          name: aimagName(c),
+          price: aimagData[s.aimag]?.[c]?.[weekA] ?? null,
+        })).filter((r) => r.price != null);
+        const avg = mean(prices.map((r) => r.price));
+        const ub = ubData[s.ub]?.[weekU] ?? null;
+        const pct = pctChange(ub, avg);
+        const mn = [...prices].sort((a, b) => a.price - b.price)[0];
+        const mx = [...prices].sort((a, b) => b.price - a.price)[0];
+        rows.push([
+          s.label,
+          ub,
+          avg != null ? Number(avg.toFixed(2)) : null,
+          pct != null ? Number(pct.toFixed(3)) : null,
+          mn?.name || "",
+          mn?.price ?? null,
+          mx?.name || "",
+          mx?.price ?? null,
+          weekLabel || "",
+        ]);
+      }
+      return rows;
+    }
+
+    function buildUbHistAoA(pCode) {
+      const pName = ubProducts.find((p) => p.code === pCode)?.name || pCode;
+      const win = $("ubWindow")?.value;
+      let weeks = ubWeeks.slice();
+      if (win && win !== "all") weeks = weeks.slice(0, Number(win));
+      const rows = [["Бүтээгдэхүүн", "Огноо", "Үнэ_₮", "Өмнөхөөс_₮", "Өөрчлөлт_%"]];
+      for (let i = 0; i < weeks.length; i++) {
+        const w = weeks[i];
+        const price = ubData[pCode]?.[w.code] ?? null;
+        const older = weeks[i + 1] ? ubData[pCode]?.[weeks[i + 1].code] ?? null : null;
+        const diff = price != null && older != null ? price - older : null;
+        const pct = pctChange(price, older);
+        rows.push([
+          pName,
+          w.name,
+          price,
+          diff,
+          pct != null ? Number(pct.toFixed(3)) : null,
+        ]);
+      }
+      return rows;
+    }
+
+    function buildAimagViewAoA() {
+      const pCode = $("aimagProduct")?.value || aimagProducts[0]?.code;
+      const wA = $("aimagWeekA")?.value || aimagWeeks[0]?.code;
+      const wB = $("aimagWeekB")?.value || aimagWeeks[1]?.code;
+      const pName = aimagProducts.find((p) => p.code === pCode)?.name || "";
+      const labelA = aimagWeeks.find((w) => w.code === wA)?.name || "A";
+      const labelB = aimagWeeks.find((w) => w.code === wB)?.name || "B";
+      const rows = [["Бүтээгдэхүүн", "Аймаг", "Үнэ_" + labelA, "Үнэ_" + labelB, "Зөрүү_₮", "Өөрчлөлт_%"]];
+      for (const c of AIMAG_CODES) {
+        const a = aimagData[pCode]?.[c]?.[wA] ?? null;
+        const b = aimagData[pCode]?.[c]?.[wB] ?? null;
+        const diff = a != null && b != null ? a - b : null;
+        const pct = pctChange(a, b);
+        rows.push([
+          pName,
+          aimagName(c),
+          a,
+          b,
+          diff,
+          pct != null ? Number(pct.toFixed(3)) : null,
+        ]);
+      }
+      return rows;
+    }
+
+    function exportFullXlsx() {
+      downloadXlsx(`une-dashboard-${fileStamp()}-bugd.xlsx`, {
+        "Метадата": metaSheet(),
+        "УБ_сүүлийн": buildUbLatestAoA(),
+        "УБ_цуврал": buildUbSeriesAoA(),
+        "Аймаг_сүүлийн": buildAimagLatestAoA(),
+        "Аймаг_цуврал_урт": buildAimagLongAoA(),
+        "УБ_vs_аймаг": buildCompareAoA(),
+      });
+    }
+
+    function exportUbXlsx() {
+      downloadXlsx(`une-UB-${fileStamp()}.xlsx`, {
+        "Метадата": metaSheet(),
+        "УБ_сүүлийн": buildUbLatestAoA(),
+        "УБ_цуврал": buildUbSeriesAoA(),
+        "УБ_урт": buildUbLongAoA(),
+      });
+    }
+
+    function exportAimagXlsx() {
+      downloadXlsx(`une-aimag-${fileStamp()}.xlsx`, {
+        "Метадата": metaSheet(),
+        "Аймаг_сүүлийн": buildAimagLatestAoA(),
+        "Аймаг_цуврал_урт": buildAimagLongAoA(),
+      });
+    }
+
+    function exportCurrentView() {
+      const tab = document.querySelector(".tab.active")?.dataset.tab || "overview";
+      if (tab === "ub") {
+        if (ubActiveSub === "detail") {
+          const code = $("ubProduct")?.value || ubProducts[0]?.code;
+          downloadXlsx(`une-UB-tuuh-${fileStamp()}.xlsx`, {
+            "Түүх": buildUbHistAoA(code),
+            "УБ_сүүлийн": buildUbLatestAoA(),
+          });
+        } else if (ubActiveSub === "table") {
+          downloadXlsx(`une-UB-jagsaalt-${fileStamp()}.xlsx`, {
+            "УБ_сүүлийн": buildUbLatestAoA(),
+          });
+        } else if (ubActiveSub === "multi") {
+          const selected = [...($("ubMultiProducts")?.selectedOptions || [])].map((o) => o.value);
+          const win = Number($("ubMultiWindow")?.value) || 26;
+          const weeks = ubWeeks.slice(0, win);
+          const header = ["Бүтээгдэхүүн", ...weeks.map((w) => w.name).reverse()];
+          const rows = [header];
+          for (const code of selected) {
+            const name = ubProducts.find((p) => p.code === code)?.name || code;
+            const chron = [...weeks].reverse();
+            rows.push([name, ...chron.map((w) => ubData[code]?.[w.code] ?? null)]);
+          }
+          downloadXlsx(`une-UB-olon-${fileStamp()}.xlsx`, { "Олон_бүтээгдэхүүн": rows });
+        } else {
+          exportUbXlsx();
+        }
+      } else if (tab === "aimag" || tab === "map") {
+        downloadXlsx(`une-aimag-haragdal-${fileStamp()}.xlsx`, {
+          "Аймаг_сонгосон": buildAimagViewAoA(),
+          "Аймаг_сүүлийн": buildAimagLatestAoA(),
+        });
+      } else if (tab === "compare") {
+        downloadXlsx(`une-haritsuulalt-${fileStamp()}.xlsx`, {
+          "УБ_vs_аймаг": buildCompareAoA(),
+        });
+      } else {
+        exportFullXlsx();
+      }
+    }
+
+    function runExport(kind) {
+      if (!hasExportData()) {
+        alert("Өгөгдөл хараахан ачаалагдаагүй байна. Түр хүлээгээд дахин оролдоно уу.");
+        return;
+      }
+      try {
+        if (kind === "full-xlsx") exportFullXlsx();
+        else if (kind === "ub-xlsx") exportUbXlsx();
+        else if (kind === "aimag-xlsx") exportAimagXlsx();
+        else if (kind === "ub-csv") downloadCsv(`une-UB-${fileStamp()}.csv`, buildUbLatestAoA());
+        else if (kind === "aimag-csv") downloadCsv(`une-aimag-${fileStamp()}.csv`, buildAimagLatestAoA());
+        else if (kind === "full-csv") {
+          downloadCsv(`une-UB-${fileStamp()}.csv`, buildUbLatestAoA());
+          setTimeout(() => downloadCsv(`une-aimag-${fileStamp()}.csv`, buildAimagLatestAoA()), 400);
+        } else if (kind === "current") exportCurrentView();
+        else if (kind === "ub-hist") {
+          const code = $("ubProduct")?.value || ubProducts[0]?.code;
+          downloadXlsx(`une-UB-tuuh-${fileStamp()}.xlsx`, { "Түүх": buildUbHistAoA(code) });
+        } else if (kind === "ub-table") {
+          downloadXlsx(`une-UB-jagsaalt-${fileStamp()}.xlsx`, { "УБ_сүүлийн": buildUbLatestAoA() });
+        } else if (kind === "aimag-view") {
+          downloadXlsx(`une-aimag-haragdal-${fileStamp()}.xlsx`, { "Аймаг_сонгосон": buildAimagViewAoA() });
+        } else if (kind === "compare") {
+          downloadXlsx(`une-haritsuulalt-${fileStamp()}.xlsx`, { "УБ_vs_аймаг": buildCompareAoA() });
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Таталт амжилтгүй: " + (err.message || err));
+      }
+    }
+
     // ─── Events ───────────────────────────────────────────────
     function bindEvents() {
       $("btnRefresh").addEventListener("click", () => init(true));
+
+      // Download menu
+      const dlWrap = $("dlWrap");
+      const dlBtn = $("btnDlMenu");
+      dlBtn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dlWrap?.classList.toggle("open");
+      });
+      document.addEventListener("click", (e) => {
+        if (dlWrap && !dlWrap.contains(e.target)) dlWrap.classList.remove("open");
+      });
+      $("dlMenu")?.querySelectorAll("button[data-export]").forEach((b) => {
+        b.addEventListener("click", () => {
+          dlWrap?.classList.remove("open");
+          runExport(b.dataset.export);
+        });
+      });
+      $("btnDlUbTable")?.addEventListener("click", () => runExport("ub-table"));
+      $("btnDlUbHist")?.addEventListener("click", () => runExport("ub-hist"));
+      $("btnDlAimag")?.addEventListener("click", () => runExport("aimag-view"));
+      $("btnDlCompare")?.addEventListener("click", () => runExport("compare"));
       $("ovProduct").addEventListener("change", renderOvBar);
       $("ubApply").addEventListener("click", () => renderUbDetail());
       $("ubProduct").addEventListener("change", () => renderUbDetail());
@@ -2902,10 +3351,12 @@
         else if (active === "compare") renderCompare();
         else if (active === "trend") renderTrend();
         setTimeout(invalidateMaps, 120);
+        setExportEnabled(true);
         hideLoading();
       } catch (err) {
         console.error(err);
         hideLoading();
+        setExportEnabled(false);
         showError(
           "1212.mn API-тай холбогдож чадсангүй. Интернэт холболт болон CORS-ийг шалгана уу. " +
           "GitHub Pages дээр эсвэл локал серверээр (python -m http.server) нээнэ үү. " +
