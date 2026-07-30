@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7 хоногийн үнийн дашбоард — ҮСХ 1212.mn</title>
+  <meta name="description" content="Хүнсний гол нэр болон бензин түлшний 7 хоногийн дундаж үнэ — Улаанбаатар болон аймгууд. ҮСХ 1212.mn-ийн амьд өгөгдөл." />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg2: #111827;
+      --surface: #151f32;
+      --surface2: #1c2a42;
+      --surface3: #243552;
+      --border: #2a3b55;
+      --text: #eef3fb;
+      --muted: #8fa3bf;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --up: #f87171;
+      --down: #4ade80;
+      --flat: #94a3b8;
+      --warn: #fbbf24;
+      --radius: 14px;
+      --shadow: 0 10px 40px rgba(0,0,0,.35);
+      --font: "Segoe UI", system-ui, -apple-system, "Noto Sans Mongolian", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: radial-gradient(1200px 600px at 10% -10%, #1e3a5f55, transparent),
+                  radial-gradient(900px 500px at 100% 0%, #312e8155, transparent),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    a { color: #7dd3fc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    header.app-header {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(11, 18, 32, 0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 1.25rem;
+      display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      display: grid; place-items: center; font-size: 1.2rem;
+      box-shadow: 0 4px 16px rgba(56,189,248,.35);
+    }
+    .brand h1 { font-size: 1.05rem; font-weight: 750; letter-spacing: -0.02em; }
+    .brand h1 span { color: var(--accent); }
+    .brand p { font-size: 0.72rem; color: var(--muted); }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .badge {
+      font-size: 0.68rem; font-weight: 650;
+      padding: 0.22rem 0.55rem; border-radius: 999px;
+      border: 1px solid transparent;
+    }
+    .badge.live { background: rgba(74,222,128,.12); color: #86efac; border-color: rgba(74,222,128,.3); }
+    .badge.src { background: rgba(56,189,248,.12); color: #7dd3fc; border-color: rgba(56,189,248,.3); }
+    .header-meta {
+      margin-left: auto; display: flex; flex-wrap: wrap; gap: 0.6rem 1rem;
+      align-items: center; font-size: 0.78rem; color: var(--muted);
+    }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); border-radius: 10px; padding: 0.5rem 0.9rem;
+      font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: .15s ease;
+    }
+    .btn:hover { background: var(--surface3); border-color: #3d5375; }
+    .btn.primary {
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      border-color: transparent; color: white;
+    }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Layout */
+    .wrap { max-width: 1440px; margin: 0 auto; padding: 1.1rem 1.15rem 2.5rem; }
+    .tabs {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-bottom: 1rem; padding: 0.3rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; width: fit-content; max-width: 100%;
+    }
+    .tab {
+      border: none; background: transparent; color: var(--muted);
+      padding: 0.55rem 1rem; border-radius: 10px; font: inherit;
+      font-size: 0.86rem; font-weight: 650; cursor: pointer;
+    }
+    .tab.active { background: var(--surface3); color: var(--text); box-shadow: inset 0 0 0 1px #3d5375; }
+    .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.03); }
+    .panel { display: none; }
+    .panel.active { display: block; animation: fade .25s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none;} }
+
+    /* Cards / grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .kpi {
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.95rem 1rem; box-shadow: var(--shadow);
+      min-height: 96px;
+    }
+    .kpi .label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.35rem; }
+    .kpi .value { font-size: 1.35rem; font-weight: 750; letter-spacing: -0.02em; }
+    .kpi .sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+    .kpi .chg { font-weight: 700; font-size: 0.82rem; }
+    .chg.up { color: var(--up); }
+    .chg.down { color: var(--down); }
+    .chg.flat { color: var(--flat); }
+
+    .grid-2 {
+      display: grid; grid-template-columns: 1.2fr 1fr; gap: 0.85rem;
+    }
+    .grid-3 {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem;
+    }
+    @media (max-width: 1100px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.05rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 0.85rem;
+    }
+    .card h2 {
+      font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .card h2 .hint { font-size: 0.72rem; font-weight: 500; color: var(--muted); }
+
+    /* Controls */
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: end;
+      margin-bottom: 0.9rem;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.28rem; min-width: 160px; flex: 1; }
+    .field label { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+    select, input[type="search"] {
+      background: var(--bg2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.55rem 0.7rem; font: inherit; font-size: 0.86rem;
+      min-height: 40px; width: 100%;
+    }
+    select:focus, input:focus { outline: 2px solid rgba(56,189,248,.35); border-color: #38bdf8; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.8rem; }
+    .chip {
+      font-size: 0.72rem; padding: 0.28rem 0.6rem; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); cursor: pointer; font-weight: 600;
+    }
+    .chip.active { background: rgba(56,189,248,.15); color: #7dd3fc; border-color: rgba(56,189,248,.4); }
+    .chip:hover { border-color: #4b658a; color: var(--text); }
+
+    /* Chart */
+    .chart-box { position: relative; height: 320px; }
+    .chart-box.sm { height: 260px; }
+    .chart-box.lg { height: 380px; }
+
+    /* Table */
+    .table-wrap { overflow: auto; max-height: 520px; border-radius: 10px; border: 1px solid var(--border); }
+    table.data {
+      width: 100%; border-collapse: collapse; font-size: 0.84rem;
+      min-width: 640px;
+    }
+    table.data th, table.data td {
+      padding: 0.55rem 0.7rem; text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    table.data th {
+      position: sticky; top: 0; z-index: 2;
+      background: #1a2740; color: var(--muted);
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .03em; cursor: pointer; user-select: none;
+    }
+    table.data th:hover { color: var(--text); }
+    table.data tbody tr:hover { background: rgba(56,189,248,.06); }
+    table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.data td.rank { width: 2.2rem; color: var(--muted); font-weight: 700; }
+    .bar-cell { min-width: 110px; }
+    .bar {
+      height: 8px; border-radius: 99px; background: var(--surface3);
+      overflow: hidden; margin-top: 4px;
+    }
+    .bar > i {
+      display: block; height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+    }
+
+    /* Heatmap mini */
+    .heat-grid {
+      display: grid; gap: 4px;
+      grid-template-columns: 140px repeat(auto-fit, minmax(42px, 1fr));
+      overflow-x: auto; font-size: 0.7rem;
+    }
+    .heat-cell {
+      min-height: 34px; border-radius: 6px;
+      display: grid; place-items: center;
+      background: var(--surface2); border: 1px solid transparent;
+      font-variant-numeric: tabular-nums; font-weight: 650;
+    }
+    .heat-cell.head { background: transparent; color: var(--muted); font-weight: 600; border: none; min-height: 28px; }
+    .heat-cell.label { justify-content: start; padding-left: 6px; background: transparent; border: none; color: var(--text); font-weight: 600; }
+
+    /* Compare dual */
+    .split-note {
+      font-size: 0.78rem; color: var(--muted);
+      background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.25);
+      padding: 0.65rem 0.85rem; border-radius: 10px; margin-bottom: 0.85rem;
+    }
+
+    /* Loading / error */
+    .overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(7,12,22,.72); backdrop-filter: blur(4px);
+      display: grid; place-items: center;
+    }
+    .overlay.hidden { display: none; }
+    .loader {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.4rem 1.6rem; text-align: center;
+      min-width: 260px; box-shadow: var(--shadow);
+    }
+    .spinner {
+      width: 36px; height: 36px; margin: 0 auto 0.8rem;
+      border: 3px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-box {
+      display: none; margin: 0.8rem 0; padding: 0.8rem 1rem;
+      background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.35);
+      color: #fecaca; border-radius: 12px; font-size: 0.88rem;
+    }
+    .error-box.show { display: block; }
+
+    footer {
+      margin-top: 1.5rem; padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem; color: var(--muted);
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem;
+      justify-content: space-between;
+    }
+
+    .empty {
+      text-align: center; color: var(--muted); padding: 2rem 1rem; font-size: 0.9rem;
+    }
+    .pill-group { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .mini-legend {
+      display: flex; flex-wrap: wrap; gap: 0.8rem; font-size: 0.72rem; color: var(--muted);
+      margin-top: 0.5rem;
+    }
+    .mini-legend span::before {
+      content: ""; display: inline-block; width: 10px; height: 10px;
+      border-radius: 3px; margin-right: 5px; vertical-align: -1px;
+    }
+    .mini-legend .l-up::before { background: var(--up); }
+    .mini-legend .l-down::before { background: var(--down); }
+    .mini-legend .l-flat::before { background: var(--flat); }
+
+    /* Aimag cards for overview */
+    .aimag-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.6rem;
+    }
+    .aimag-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.75rem 0.85rem; cursor: pointer;
+      transition: .15s ease;
+    }
+    .aimag-card:hover { border-color: #4b658a; transform: translateY(-1px); }
+    .aimag-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .aimag-card .name { font-weight: 700; font-size: 0.88rem; }
+    .aimag-card .price { font-size: 1.1rem; font-weight: 750; margin: 0.2rem 0; }
+    .aimag-card .meta { font-size: 0.72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="loader">
+      <div class="spinner"></div>
+      <div id="loadMsg">1212.mn-ээс өгөгдөл татаж байна…</div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">₮</div>
+      <div>
+        <h1>7 хоногийн <span>үнийн</span> дашбоард</h1>
+        <p>Хүнс · бензин түлш · УБ + 21 аймаг</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge live">● Амьд өгөгдөл</span>
+      <span class="badge src">ҮСХ · 1212.mn</span>
+    </div>
+    <div class="header-meta">
+      <span id="lastUpdated">Сүүлийн өгөгдөл: —</span>
+      <button class="btn" id="btnRefresh" title="Дахин татах">↻ Шинэчлэх</button>
+      <a href="https://www.1212.mn" target="_blank" rel="noopener">Эх сурвалж</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="overview">Ерөнхий</button>
+      <button class="tab" data-tab="ub">Улаанбаатар</button>
+      <button class="tab" data-tab="aimag">Аймгууд</button>
+      <button class="tab" data-tab="compare">Харьцуулалт</button>
+      <button class="tab" data-tab="trend">Чиг хандлага</button>
+    </div>
+
+    <!-- ═══════ OVERVIEW ═══════ -->
+    <section class="panel active" id="panel-overview">
+      <div class="kpi-grid" id="overviewKpis"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Хамгийн их өөрчлөлт (УБ, 7 хоног) <span class="hint">өмнөх 7 хоногтой харьцуулсан</span></h2>
+          <div class="table-wrap" style="max-height:360px">
+            <table class="data" id="ovTopChgTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Бүтээгдэхүүн</th>
+                  <th class="num">Үнэ</th>
+                  <th class="num">Өөрчлөлт</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Аймгуудын дундаж vs УБ <span class="hint" id="ovSharedProductHint">нийтлэг бүтээгдэхүүн</span></h2>
+          <div class="controls" style="margin-bottom:.6rem">
+            <div class="field">
+              <label>Бүтээгдэхүүн (нийтлэг)</label>
+              <select id="ovProduct"></select>
+            </div>
+          </div>
+          <div class="chart-box sm"><canvas id="ovBarChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>УБ — үнийн түвшин (сүүлийн долоо хоног)</h2>
+        <div class="chart-box"><canvas id="ovUbPrices"></canvas></div>
+      </div>
+
+      <div class="split-note">
+        <strong>Өгөгдлийн эх:</strong>
+        Улаанбаатар — <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_001V4.px" target="_blank" rel="noopener">DT_NSO_0600_001V4</a>
+        (бүтээгдэхүүний нэр төрөл илүү олон) ·
+        Аймгууд — <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0300_010V5.px" target="_blank" rel="noopener">DT_NSO_0300_010V5</a>
+        (11 бүтээгдэхүүн). 7 хоног бүр шинэчлэгдэнэ; хуудас нээгдэх бүрт API-аас шууд татна.
+      </div>
+    </section>
+
+    <!-- ═══════ UB ═══════ -->
+    <section class="panel" id="panel-ub">
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн</label>
+          <select id="ubProduct"></select>
+        </div>
+        <div class="field">
+          <label>Хугацааны цонх</label>
+          <select id="ubWindow">
+            <option value="12">Сүүлийн 12 7-хоног</option>
+            <option value="26" selected>Сүүлийн 26 7-хоног (~6 сар)</option>
+            <option value="52">Сүүлийн 52 7-хоног (~жил)</option>
+            <option value="all">Бүх хугацаа</option>
+          </select>
+        </div>
+        <button class="btn primary" id="ubApply">Харуулах</button>
+      </div>
+      <div class="chip-row" id="ubChips"></div>
+      <div class="kpi-grid" id="ubKpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Үнийн чиг хандлага <span class="hint" id="ubChartTitle"></span></h2>
+          <div class="chart-box lg"><canvas id="ubTrendChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>7 хоногийн өөрчлөлт (%)</h2>
+          <div class="chart-box lg"><canvas id="ubChgChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Бүх бүтээгдэхүүн — сүүлийн 2 7-хоног</h2>
+        <div class="controls">
+          <div class="field">
+            <label>Хайх</label>
+            <input type="search" id="ubSearch" placeholder="жнь: мах, гурил, бензин…" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="ubAllTable">
+            <thead>
+              <tr>
+                <th data-k="name">Бүтээгдэхүүн</th>
+                <th class="num" data-k="price">Үнэ (₮)</th>
+                <th class="num" data-k="prev">Өмнөх 7 хоног</th>
+                <th class="num" data-k="diff">Зөрүү</th>
+                <th class="num" data-k="pct">%</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ AIMAG ═══════ -->
+    <section class="panel" id="panel-aimag">
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн</label>
+          <select id="aimagProduct"></select>
+        </div>
+        <div class="field">
+          <label>Харьцуулах 7 хоног (A)</label>
+          <select id="aimagWeekA"></select>
+        </div>
+        <div class="field">
+          <label>Харьцуулах 7 хоног (B — өмнөх)</label>
+          <select id="aimagWeekB"></select>
+        </div>
+        <button class="btn primary" id="aimagApply">Харуулах</button>
+      </div>
+      <div class="kpi-grid" id="aimagKpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Аймгаар үнэ <span class="hint">A 7-хоног</span></h2>
+          <div class="chart-box lg"><canvas id="aimagBarChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Өөрчлөлт (%) <span class="hint">A vs B</span></h2>
+          <div class="chart-box lg"><canvas id="aimagChgChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Аймгуудын жагсаалт</h2>
+        <div class="table-wrap">
+          <table class="data" id="aimagTable">
+            <thead>
+              <tr>
+                <th data-k="rank">#</th>
+                <th data-k="name">Аймаг</th>
+                <th class="num" data-k="priceA">Үнэ A</th>
+                <th class="num" data-k="priceB">Үнэ B</th>
+                <th class="num" data-k="diff">Зөрүү</th>
+                <th class="num" data-k="pct">%</th>
+                <th data-k="priceA">Түвшин</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="mini-legend">
+          <span class="l-up">Үнэ өссөн</span>
+          <span class="l-down">Үнэ буурсан</span>
+          <span class="l-flat">Бараг өөрчлөгдөөгүй</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Дулаан зураг — бүх бүтээгдэхүүн × аймаг (сүүлийн 7 хоног, ₮)</h2>
+        <div id="heatMap" class="heat-grid"></div>
+      </div>
+    </section>
+
+    <!-- ═══════ COMPARE ═══════ -->
+    <section class="panel" id="panel-compare">
+      <div class="split-note">
+        Аймгуудын хүснэгтэд бүтээгдэхүүний төрөл цөөн (11), УБ-д илүү олон (30+).
+        Доор зөвхөн <strong>хоёр эх сурвалжид нийтлэг</strong> байгаа бүтээгдэхүүнүүдийг харьцуулна.
+        УБ-ыг «нийслэл» гэж, аймгуудын дундаж/мин/макс-тай зэрэгцүүлнэ.
+      </div>
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Нийтлэг бүтээгдэхүүн</label>
+          <select id="cmpProduct"></select>
+        </div>
+        <div class="field">
+          <label>7 хоног</label>
+          <select id="cmpWeek"></select>
+        </div>
+        <button class="btn primary" id="cmpApply">Харьцуулах</button>
+      </div>
+      <div class="kpi-grid" id="cmpKpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>УБ vs аймгууд</h2>
+          <div class="chart-box lg"><canvas id="cmpChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>УБ харьцуулалт — нийтлэг бүтээгдэхүүнүүд</h2>
+          <div class="table-wrap">
+            <table class="data" id="cmpTable">
+              <thead>
+                <tr>
+                  <th>Бүтээгдэхүүн</th>
+                  <th class="num">УБ</th>
+                  <th class="num">Аймаг дундаж</th>
+                  <th class="num">Зөрүү %</th>
+                  <th class="num">Хамгийн хямд</th>
+                  <th class="num">Хамгийн үнэтэй</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ TREND ═══════ -->
+    <section class="panel" id="panel-trend">
+      <div class="controls">
+        <div class="field">
+          <label>Эх сурвалж</label>
+          <select id="trSource">
+            <option value="ub">Улаанбаатар</option>
+            <option value="aimag">Аймгууд (нэг аймаг)</option>
+          </select>
+        </div>
+        <div class="field" id="trAimagField" style="display:none">
+          <label>Аймаг</label>
+          <select id="trAimag"></select>
+        </div>
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн (олон сонгох — Ctrl/Cmd)</label>
+          <select id="trProducts" multiple size="6" style="min-height:120px"></select>
+        </div>
+        <div class="field">
+          <label>Цонх</label>
+          <select id="trWindow">
+            <option value="26" selected>26 7-хоног</option>
+            <option value="52">52 7-хоног</option>
+            <option value="all">Бүх</option>
+          </select>
+        </div>
+        <button class="btn primary" id="trApply">Зурах</button>
+      </div>
+      <div class="card">
+        <h2>Олон бүтээгдэхүүний чиг хандлага <span class="hint">индекс: эхний цэг = 100</span></h2>
+        <div class="chart-box lg"><canvas id="trIndexChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Нэрлэсэн үнэ (₮)</h2>
+        <div class="chart-box lg"><canvas id="trPriceChart"></canvas></div>
+      </div>
+    </section>
+
+    <footer>
+      <div>
+        Өгөгдөл: Үндэсний статистикийн хороо —
+        <a href="https://data.1212.mn/" target="_blank" rel="noopener">PxWeb API</a>.
+        Хуудас нээгдэх / «Шинэчлэх» дарах бүрт шууд API-аас татна — 1212.mn шинэчлэгдэхэд дашбоард автоматаар дагана.
+      </div>
+      <div>HTML · Chart.js · GitHub Pages-д бэлэн</div>
+    </footer>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // ─── API endpoints ────────────────────────────────────────
+    const API_AIMAG =
+      "https://data.1212.mn/api/v1/mn/NSO/Economy, environment/Consumer Price Index/DT_NSO_0300_010V5.px";
+    const API_UB =
+      "https://data.1212.mn/api/v1/mn/NSO/Economy, environment/Consumer Price Index/DT_NSO_0600_001V4.px";
+
+    // 21 aimags only (skip region aggregates 1,2,3,4)
+    const AIMAGS = {
+      "183": "Баян-Өлгий",
+      "182": "Говь-Алтай",
+      "181": "Завхан",
+      "185": "Увс",
+      "184": "Ховд",
+      "265": "Архангай",
+      "264": "Баянхонгор",
+      "263": "Булган",
+      "261": "Орхон",
+      "262": "Өвөрхангай",
+      "267": "Хөвсгөл",
+      "342": "Говьсүмбэр",
+      "345": "Дархан-Уул",
+      "344": "Дорноговь",
+      "348": "Дундговь",
+      "346": "Өмнөговь",
+      "343": "Сэлэнгэ",
+      "341": "Төв",
+      "421": "Дорнод",
+      "422": "Сүхбаатар",
+      "423": "Хэнтий",
+    };
+    const AIMAG_CODES = Object.keys(AIMAGS);
+
+    /** Shared product mapping: aimag code <-> ub code (approximate name match) */
+    const SHARED = [
+      { key: "sheep", label: "Хонины мах, ястай, кг", aimag: "7", ub: "9" },
+      { key: "beef", label: "Үхрийн мах, ястай, кг", aimag: "6", ub: "10" },
+      { key: "goat", label: "Ямааны мах, ястай, кг", aimag: "10", ub: "13" },
+      { key: "flour1", label: "Гурил, I зэрэг, савласан, кг", aimag: "0", ub: "3" },
+      { key: "sugar", label: "Элсэн чихэр, кг", aimag: "9", ub: "20" },
+      { key: "rice", label: "Цагаан будаа, кг", aimag: "8", ub: "8" },
+      { key: "milk", label: "Сүү (задгай)", aimag: "5", ub: "14" },
+      { key: "ai80", label: "Аи-80 автобензин, л", aimag: "1", ub: "29" },
+      { key: "ai92", label: "Аи-92 автобензин, л", aimag: "2", ub: "30" },
+      { key: "diesel", label: "Дизелийн түлш, л", aimag: "4", ub: "31" },
+    ];
+
+    const CHART_COLORS = [
+      "#38bdf8","#818cf8","#f472b6","#4ade80","#fbbf24","#fb7185",
+      "#2dd4bf","#a78bfa","#f97316","#34d399","#60a5fa","#e879f9",
+    ];
+
+    // ─── State ────────────────────────────────────────────────
+    let metaAimag = null;
+    let metaUb = null;
+    /** aimagData[productCode][aimagCode][weekCode] = number|null */
+    let aimagData = {};
+    /** ubData[productCode][weekCode] = number|null */
+    let ubData = {};
+    let aimagProducts = []; // {code,name}
+    let ubProducts = [];
+    let aimagWeeks = []; // {code,label} newest first
+    let ubWeeks = [];
+    let charts = {};
+
+    // ─── DOM ──────────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const elOverlay = $("overlay");
+    const elLoadMsg = $("loadMsg");
+    const elError = $("errorBox");
+    const elUpdated = $("lastUpdated");
+
+    // ─── Utils ────────────────────────────────────────────────
+    function showLoading(msg) {
+      elLoadMsg.textContent = msg || "Өгөгдөл ачаалж байна…";
+      elOverlay.classList.remove("hidden");
+    }
+    function hideLoading() { elOverlay.classList.add("hidden"); }
+    function showError(msg) {
+      elError.textContent = msg;
+      elError.classList.add("show");
+    }
+    function clearError() {
+      elError.classList.remove("show");
+      elError.textContent = "";
+    }
+    function fmtMNT(n) {
+      if (n == null || Number.isNaN(n)) return "—";
+      return new Intl.NumberFormat("mn-MN").format(Math.round(n)) + " ₮";
+    }
+    function fmtNum(n, d = 0) {
+      if (n == null || Number.isNaN(n)) return "—";
+      return new Intl.NumberFormat("mn-MN", { maximumFractionDigits: d, minimumFractionDigits: d }).format(n);
+    }
+    function fmtPct(n) {
+      if (n == null || Number.isNaN(n)) return "—";
+      const s = n > 0 ? "+" : "";
+      return s + n.toFixed(1) + "%";
+    }
+    function chgClass(pct) {
+      if (pct == null || Number.isNaN(pct)) return "flat";
+      if (pct > 0.05) return "up";
+      if (pct < -0.05) return "down";
+      return "flat";
+    }
+    function pctChange(a, b) {
+      if (a == null || b == null || b === 0 || Number.isNaN(a) || Number.isNaN(b)) return null;
+      return ((a - b) / b) * 100;
+    }
+    function mean(arr) {
+      const v = arr.filter((x) => x != null && !Number.isNaN(x));
+      if (!v.length) return null;
+      return v.reduce((s, x) => s + x, 0) / v.length;
+    }
+    function destroyChart(key) {
+      if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+    }
+    function chartDefaults() {
+      Chart.defaults.color = "#8fa3bf";
+      Chart.defaults.borderColor = "rgba(42,59,85,.8)";
+      Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    }
+
+    // ─── API ──────────────────────────────────────────────────
+    async function fetchMeta(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Метадата алдаа: " + res.status + " · " + url);
+      return res.json();
+    }
+
+    async function postQuery(url, query) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, response: { format: "json-stat2" } }),
+      });
+      if (!res.ok) throw new Error("Өгөгдөл татах алдаа: " + res.status);
+      return res.json();
+    }
+
+    function parseMetaVariables(meta) {
+      const vars = {};
+      for (const v of meta.variables || []) {
+        const items = [];
+        for (let i = 0; i < v.values.length; i++) {
+          const code = String(v.values[i] ?? "");
+          if (code === "" && !v.valueTexts[i]) continue;
+          items.push({ code, name: String(v.valueTexts[i] || code).trim() });
+        }
+        vars[v.code] = items;
+        vars[v.text] = items; // alias by mongolian label too
+      }
+      return vars;
+    }
+
+    /**
+     * json-stat2: dimensions order in js.id, values flat array
+     * Index formula: for dims d0,d1,d2 with sizes s0,s1,s2:
+     * idx = i0*s1*s2 + i1*s2 + i2
+     */
+    function parseJsonStat(js) {
+      const ids = js.id || [];
+      const size = js.size || [];
+      const values = js.value || [];
+      const dim = js.dimension || {};
+
+      const dimCodes = {}; // dimName -> ordered codes by position
+      const dimLabels = {};
+      for (const id of ids) {
+        const cat = dim[id]?.category;
+        if (!cat) continue;
+        const index = cat.index; // code -> position
+        const label = cat.label || {};
+        const ordered = new Array(Object.keys(index).length);
+        for (const [code, pos] of Object.entries(index)) {
+          ordered[pos] = String(code);
+        }
+        dimCodes[id] = ordered;
+        dimLabels[id] = label;
+      }
+
+      const n = values.length;
+      const strides = new Array(ids.length);
+      let acc = 1;
+      for (let d = ids.length - 1; d >= 0; d--) {
+        strides[d] = acc;
+        acc *= size[d];
+      }
+
+      function getCoords(flatIdx) {
+        const coords = {};
+        for (let d = 0; d < ids.length; d++) {
+          const pos = Math.floor(flatIdx / strides[d]) % size[d];
+          coords[ids[d]] = dimCodes[ids[d]][pos];
+        }
+        return coords;
+      }
+
+      const rows = [];
+      for (let i = 0; i < n; i++) {
+        const val = values[i];
+        const num = val == null || val === "" ? null : Number(val);
+        rows.push({ ...getCoords(i), value: Number.isFinite(num) ? num : null });
+      }
+      return { rows, dimCodes, dimLabels, updated: js.updated, label: js.label };
+    }
+
+    async function loadAllData() {
+      showLoading("Метадата татаж байна…");
+      metaAimag = await fetchMeta(API_AIMAG);
+      metaUb = await fetchMeta(API_UB);
+
+      const va = parseMetaVariables(metaAimag);
+      const vu = parseMetaVariables(metaUb);
+
+      aimagProducts = (va["Бүтээгдэхүүн"] || []).filter((p) => p.code !== "");
+      ubProducts = (vu["Бүтээгдэхүүн"] || []).filter((p) => p.code !== "");
+      aimagWeeks = (va["Хугацаа"] || []).slice(); // already newest first in meta
+      ubWeeks = (vu["Хугацаа"] || []).slice();
+
+      // Fetch recent history: enough for charts (up to 52 weeks + all products)
+      const weekCountA = Math.min(aimagWeeks.length, 60);
+      const weekCountU = Math.min(ubWeeks.length, 60);
+      const weekCodesA = aimagWeeks.slice(0, weekCountA).map((w) => w.code);
+      const weekCodesU = ubWeeks.slice(0, weekCountU).map((w) => w.code);
+      const prodCodesA = aimagProducts.map((p) => p.code);
+      const prodCodesU = ubProducts.map((p) => p.code);
+
+      showLoading("Аймгуудын үнэ татаж байна…");
+      const jsA = await postQuery(API_AIMAG, [
+        { code: "Бүтээгдэхүүн", selection: { filter: "item", values: prodCodesA } },
+        { code: "Бүс", selection: { filter: "item", values: AIMAG_CODES } },
+        { code: "Хугацаа", selection: { filter: "item", values: weekCodesA } },
+      ]);
+
+      showLoading("Улаанбаатарын үнэ татаж байна…");
+      const jsU = await postQuery(API_UB, [
+        { code: "Бүтээгдэхүүн", selection: { filter: "item", values: prodCodesU } },
+        { code: "Хугацаа", selection: { filter: "item", values: weekCodesU } },
+      ]);
+
+      // Build nested maps
+      aimagData = {};
+      const parsedA = parseJsonStat(jsA);
+      for (const r of parsedA.rows) {
+        const p = r["Бүтээгдэхүүн"];
+        const a = r["Бүс"];
+        const t = r["Хугацаа"];
+        if (!aimagData[p]) aimagData[p] = {};
+        if (!aimagData[p][a]) aimagData[p][a] = {};
+        aimagData[p][a][t] = r.value;
+      }
+
+      ubData = {};
+      const parsedU = parseJsonStat(jsU);
+      for (const r of parsedU.rows) {
+        const p = r["Бүтээгдэхүүн"];
+        const t = r["Хугацаа"];
+        if (!ubData[p]) ubData[p] = {};
+        ubData[p][t] = r.value;
+      }
+
+      const uDate = ubWeeks[0]?.name || "—";
+      const aDate = aimagWeeks[0]?.name || "—";
+      elUpdated.textContent =
+        "Сүүлийн өгөгдөл: " + uDate + (uDate !== aDate ? " (УБ) / " + aDate + " (аймаг)" : "");
+      return { parsedA, parsedU };
+    }
+
+    // ─── Populate selects ─────────────────────────────────────
+    function fillSelect(el, items, mapFn) {
+      el.innerHTML = "";
+      for (const it of items) {
+        const opt = document.createElement("option");
+        const m = mapFn(it);
+        opt.value = m.value;
+        opt.textContent = m.label;
+        el.appendChild(opt);
+      }
+    }
+
+    function setupControls() {
+      fillSelect($("ubProduct"), ubProducts, (p) => ({ value: p.code, label: p.name }));
+      fillSelect($("aimagProduct"), aimagProducts, (p) => ({ value: p.code, label: p.name }));
+      fillSelect($("ovProduct"), SHARED, (p) => ({ value: p.key, label: p.label }));
+      fillSelect($("cmpProduct"), SHARED, (p) => ({ value: p.key, label: p.label }));
+      fillSelect($("aimagWeekA"), aimagWeeks, (w) => ({ value: w.code, label: w.name }));
+      fillSelect($("aimagWeekB"), aimagWeeks, (w) => ({ value: w.code, label: w.name }));
+      fillSelect($("cmpWeek"), aimagWeeks.slice(0, 40), (w) => ({ value: w.code, label: w.name }));
+      fillSelect($("trAimag"), AIMAG_CODES.map((c) => ({ code: c, name: AIMAGS[c] })), (a) => ({
+        value: a.code, label: a.name,
+      }));
+
+      if (aimagWeeks.length > 1) {
+        $("aimagWeekA").value = aimagWeeks[0].code;
+        $("aimagWeekB").value = aimagWeeks[1].code;
+      }
+
+      // UB chips — quick categories
+      const chips = [
+        { q: "мах", label: "Мах" },
+        { q: "гурил", label: "Гурил" },
+        { q: "талх", label: "Талх" },
+        { q: "сүү", label: "Сүү/цагаан идээ" },
+        { q: "ногоо|төмс|лууван|байцаа|сонгино|манжин", label: "Ногоо" },
+        { q: "бензин|дизель|аи-", label: "Шатахуун" },
+        { q: "", label: "Бүгд" },
+      ];
+      const chipBox = $("ubChips");
+      chipBox.innerHTML = "";
+      chips.forEach((c, i) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip" + (i === chips.length - 1 ? " active" : "");
+        b.textContent = c.label;
+        b.dataset.q = c.q;
+        b.addEventListener("click", () => {
+          chipBox.querySelectorAll(".chip").forEach((x) => x.classList.remove("active"));
+          b.classList.add("active");
+          filterUbProductSelect(c.q);
+        });
+        chipBox.appendChild(b);
+      });
+
+      // Trend multi-select defaults: first 3 ub products
+      fillTrProducts("ub");
+      const trSel = $("trProducts");
+      [...trSel.options].slice(0, 3).forEach((o) => { o.selected = true; });
+    }
+
+    function filterUbProductSelect(q) {
+      const sel = $("ubProduct");
+      const re = q ? new RegExp(q, "i") : null;
+      let first = null;
+      [...sel.options].forEach((opt) => {
+        const show = !re || re.test(opt.textContent);
+        opt.hidden = !show;
+        if (show && !first) first = opt;
+      });
+      if (first) {
+        sel.value = first.value;
+        renderUb();
+      }
+    }
+
+    function fillTrProducts(source) {
+      const sel = $("trProducts");
+      const list = source === "ub" ? ubProducts : aimagProducts;
+      fillSelect(sel, list, (p) => ({ value: p.code, label: p.name }));
+    }
+
+    // ─── Tabs ─────────────────────────────────────────────────
+    function setupTabs() {
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+          document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+          tab.classList.add("active");
+          $("panel-" + tab.dataset.tab).classList.add("active");
+          // lazy re-render when switching (charts need visible canvas)
+          if (tab.dataset.tab === "overview") renderOverview();
+          if (tab.dataset.tab === "ub") renderUb();
+          if (tab.dataset.tab === "aimag") renderAimag();
+          if (tab.dataset.tab === "compare") renderCompare();
+          if (tab.dataset.tab === "trend") renderTrend();
+        });
+      });
+    }
+
+    // ─── Overview ─────────────────────────────────────────────
+    function renderOverview() {
+      const w0 = ubWeeks[0]?.code;
+      const w1 = ubWeeks[1]?.code;
+      const a0 = aimagWeeks[0]?.code;
+      const a1 = aimagWeeks[1]?.code;
+
+      // KPI: count products, avg weekly change UB, biggest movers
+      const ubRows = ubProducts.map((p) => {
+        const cur = ubData[p.code]?.[w0] ?? null;
+        const prev = ubData[p.code]?.[w1] ?? null;
+        return { ...p, cur, prev, pct: pctChange(cur, prev) };
+      }).filter((r) => r.cur != null);
+
+      const up = ubRows.filter((r) => r.pct != null && r.pct > 0.05).length;
+      const down = ubRows.filter((r) => r.pct != null && r.pct < -0.05).length;
+      const avgPct = mean(ubRows.map((r) => r.pct));
+      const topUp = [...ubRows].filter((r) => r.pct != null).sort((a, b) => b.pct - a.pct)[0];
+      const topDown = [...ubRows].filter((r) => r.pct != null).sort((a, b) => a.pct - b.pct)[0];
+
+      // Aimag national mean for sheep meat as sample
+      const sheep = SHARED[0];
+      const sheepPrices = AIMAG_CODES.map((c) => aimagData[sheep.aimag]?.[c]?.[a0] ?? null);
+      const sheepMean = mean(sheepPrices);
+      const sheepUb = ubData[sheep.ub]?.[w0] ?? null;
+
+      $("overviewKpis").innerHTML = `
+        <div class="kpi"><div class="label">УБ бүтээгдэхүүн</div><div class="value">${ubProducts.length}</div><div class="sub">нийслэлийн жагсаалт</div></div>
+        <div class="kpi"><div class="label">Аймгийн бүтээгдэхүүн</div><div class="value">${aimagProducts.length}</div><div class="sub">21 аймаг</div></div>
+        <div class="kpi"><div class="label">Сүүлийн 7 хоног</div><div class="value" style="font-size:1.05rem">${ubWeeks[0]?.name || "—"}</div><div class="sub">шинэчлэгдсэн өдөр</div></div>
+        <div class="kpi"><div class="label">УБ дундаж өөрчлөлт</div><div class="value chg ${chgClass(avgPct)}">${fmtPct(avgPct)}</div><div class="sub">өсөлт ${up} · бууралт ${down}</div></div>
+        <div class="kpi"><div class="label">Хамгийн их өссөн (УБ)</div><div class="value" style="font-size:.95rem">${topUp ? topUp.name.split(",")[0] : "—"}</div><div class="sub chg up">${topUp ? fmtPct(topUp.pct) + " · " + fmtMNT(topUp.cur) : ""}</div></div>
+        <div class="kpi"><div class="label">Хамгийн их буурсан (УБ)</div><div class="value" style="font-size:.95rem">${topDown ? topDown.name.split(",")[0] : "—"}</div><div class="sub chg down">${topDown ? fmtPct(topDown.pct) + " · " + fmtMNT(topDown.cur) : ""}</div></div>
+        <div class="kpi"><div class="label">Хонины мах — аймаг дундаж</div><div class="value" style="font-size:1.05rem">${fmtMNT(sheepMean)}</div><div class="sub">УБ: ${fmtMNT(sheepUb)}</div></div>
+        <div class="kpi"><div class="label">Хугацааны цуваа</div><div class="value">${Math.min(ubWeeks.length, 60)}</div><div class="sub">7-хоног (ачаалсан)</div></div>
+      `;
+
+      // Top change table
+      const sorted = [...ubRows].filter((r) => r.pct != null).sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct)).slice(0, 15);
+      const tb = $("ovTopChgTable").querySelector("tbody");
+      tb.innerHTML = sorted.map((r, i) => `
+        <tr>
+          <td class="rank">${i + 1}</td>
+          <td>${escapeHtml(r.name)}</td>
+          <td class="num">${fmtMNT(r.cur)}</td>
+          <td class="num chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="4" class="empty">Мэдээлэл алга</td></tr>`;
+
+      // Shared product bar: aimags + UB
+      renderOvBar();
+      renderOvUbPrices(ubRows);
+    }
+
+    function renderOvBar() {
+      const key = $("ovProduct").value;
+      const sh = SHARED.find((s) => s.key === key) || SHARED[0];
+      $("ovSharedProductHint").textContent = sh.label;
+      const week = aimagWeeks[0]?.code;
+      const weekUb = ubWeeks[0]?.code;
+
+      const labels = [];
+      const data = [];
+      const bg = [];
+
+      // UB first
+      labels.push("Улаанбаатар");
+      data.push(ubData[sh.ub]?.[weekUb] ?? null);
+      bg.push("#fbbf24");
+
+      const rows = AIMAG_CODES.map((c) => ({
+        code: c,
+        name: AIMAGS[c],
+        price: aimagData[sh.aimag]?.[c]?.[week] ?? null,
+      })).filter((r) => r.price != null).sort((a, b) => a.price - b.price);
+
+      for (const r of rows) {
+        labels.push(r.name);
+        data.push(r.price);
+        bg.push("#38bdf8");
+      }
+
+      destroyChart("ovBar");
+      charts.ovBar = new Chart($("ovBarChart"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "Үнэ (₮)",
+            data,
+            backgroundColor: bg,
+            borderRadius: 4,
+            maxBarThickness: 18,
+          }],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => fmtMNT(ctx.raw),
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+    }
+
+    function renderOvUbPrices(ubRows) {
+      const rows = [...ubRows].sort((a, b) => (b.cur || 0) - (a.cur || 0));
+      destroyChart("ovUb");
+      charts.ovUb = new Chart($("ovUbPrices"), {
+        type: "bar",
+        data: {
+          labels: rows.map((r) => shortName(r.name)),
+          datasets: [{
+            label: "Үнэ (₮)",
+            data: rows.map((r) => r.cur),
+            backgroundColor: rows.map((_, i) => CHART_COLORS[i % CHART_COLORS.length] + "cc"),
+            borderRadius: 4,
+            maxBarThickness: 22,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => rows[items[0].dataIndex]?.name || "",
+                label: (ctx) => fmtMNT(ctx.raw),
+              },
+            },
+          },
+          scales: {
+            x: { ticks: { maxRotation: 60, minRotation: 40, font: { size: 9 } }, grid: { display: false } },
+            y: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+    }
+
+    function shortName(s) {
+      return String(s).split(",")[0].slice(0, 22);
+    }
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // ─── UB panel ─────────────────────────────────────────────
+    function renderUb() {
+      const pCode = $("ubProduct").value || ubProducts[0]?.code;
+      const win = $("ubWindow").value;
+      const pName = ubProducts.find((p) => p.code === pCode)?.name || "";
+      $("ubChartTitle").textContent = pName;
+
+      let weeks = ubWeeks.slice();
+      if (win !== "all") weeks = weeks.slice(0, Number(win));
+      // chronological for charts
+      const chron = [...weeks].reverse();
+      const series = chron.map((w) => ubData[pCode]?.[w.code] ?? null);
+      const labels = chron.map((w) => w.name);
+
+      const cur = series[series.length - 1];
+      const prev = series.length > 1 ? series[series.length - 2] : null;
+      const first = series.find((x) => x != null);
+      const pctW = pctChange(cur, prev);
+      const pctP = pctChange(cur, first);
+      const maxV = Math.max(...series.filter((x) => x != null));
+      const minV = Math.min(...series.filter((x) => x != null));
+
+      $("ubKpis").innerHTML = `
+        <div class="kpi"><div class="label">Одоогийн үнэ</div><div class="value">${fmtMNT(cur)}</div><div class="sub">${ubWeeks[0]?.name || ""}</div></div>
+        <div class="kpi"><div class="label">7 хоногийн өөрчлөлт</div><div class="value chg ${chgClass(pctW)}">${fmtPct(pctW)}</div><div class="sub">${prev != null ? fmtMNT(prev) + " → " + fmtMNT(cur) : ""}</div></div>
+        <div class="kpi"><div class="label">Цонхны өөрчлөлт</div><div class="value chg ${chgClass(pctP)}">${fmtPct(pctP)}</div><div class="sub">эхний цэгтэй харьцуулсан</div></div>
+        <div class="kpi"><div class="label">Дээд / доод (цонх)</div><div class="value" style="font-size:1rem">${fmtMNT(maxV)}</div><div class="sub">мин: ${fmtMNT(minV)}</div></div>
+      `;
+
+      destroyChart("ubTrend");
+      charts.ubTrend = new Chart($("ubTrendChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: pName,
+            data: series,
+            borderColor: "#38bdf8",
+            backgroundColor: "rgba(56,189,248,.15)",
+            fill: true,
+            tension: 0.25,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => fmtMNT(c.raw) } },
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 10, font: { size: 10 } }, grid: { display: false } },
+            y: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+
+      // WoW % changes
+      const chgLabels = [];
+      const chgData = [];
+      const chgColors = [];
+      for (let i = 1; i < chron.length; i++) {
+        const pct = pctChange(series[i], series[i - 1]);
+        chgLabels.push(chron[i].name);
+        chgData.push(pct);
+        chgColors.push(pct == null ? "#94a3b8" : pct > 0 ? "#f87171" : pct < 0 ? "#4ade80" : "#94a3b8");
+      }
+      destroyChart("ubChg");
+      charts.ubChg = new Chart($("ubChgChart"), {
+        type: "bar",
+        data: {
+          labels: chgLabels,
+          datasets: [{
+            label: "% өөрчлөлт",
+            data: chgData,
+            backgroundColor: chgColors,
+            borderRadius: 3,
+            maxBarThickness: 16,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => fmtPct(c.raw) } },
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 10, font: { size: 9 } }, grid: { display: false } },
+            y: {
+              ticks: { callback: (v) => v + "%" },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+
+      renderUbAllTable();
+    }
+
+    let ubSort = { key: "pct", dir: -1 };
+    function renderUbAllTable() {
+      const w0 = ubWeeks[0]?.code;
+      const w1 = ubWeeks[1]?.code;
+      const q = ($("ubSearch").value || "").trim().toLowerCase();
+      let rows = ubProducts.map((p) => {
+        const price = ubData[p.code]?.[w0] ?? null;
+        const prev = ubData[p.code]?.[w1] ?? null;
+        const diff = price != null && prev != null ? price - prev : null;
+        const pct = pctChange(price, prev);
+        return { name: p.name, price, prev, diff, pct };
+      });
+      if (q) rows = rows.filter((r) => r.name.toLowerCase().includes(q));
+      rows.sort((a, b) => {
+        const ka = a[ubSort.key], kb = b[ubSort.key];
+        if (ka == null && kb == null) return 0;
+        if (ka == null) return 1;
+        if (kb == null) return -1;
+        if (typeof ka === "string") return ka.localeCompare(kb, "mn") * ubSort.dir;
+        return (ka - kb) * ubSort.dir;
+      });
+      const tb = $("ubAllTable").querySelector("tbody");
+      tb.innerHTML = rows.map((r) => `
+        <tr>
+          <td>${escapeHtml(r.name)}</td>
+          <td class="num">${fmtMNT(r.price)}</td>
+          <td class="num">${fmtMNT(r.prev)}</td>
+          <td class="num chg ${chgClass(r.pct)}">${r.diff == null ? "—" : (r.diff > 0 ? "+" : "") + fmtNum(r.diff)}</td>
+          <td class="num chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="empty">Илэрц алга</td></tr>`;
+    }
+
+    // ─── Aimag panel ──────────────────────────────────────────
+    let aimagSort = { key: "priceA", dir: -1 };
+    function renderAimag() {
+      const pCode = $("aimagProduct").value || aimagProducts[0]?.code;
+      const wA = $("aimagWeekA").value || aimagWeeks[0]?.code;
+      const wB = $("aimagWeekB").value || aimagWeeks[1]?.code;
+
+      const rows = AIMAG_CODES.map((c) => {
+        const priceA = aimagData[pCode]?.[c]?.[wA] ?? null;
+        const priceB = aimagData[pCode]?.[c]?.[wB] ?? null;
+        const diff = priceA != null && priceB != null ? priceA - priceB : null;
+        const pct = pctChange(priceA, priceB);
+        return { code: c, name: AIMAGS[c], priceA, priceB, diff, pct };
+      });
+
+      const valid = rows.filter((r) => r.priceA != null);
+      const avg = mean(valid.map((r) => r.priceA));
+      const avgPct = mean(valid.map((r) => r.pct));
+      const maxR = [...valid].sort((a, b) => b.priceA - a.priceA)[0];
+      const minR = [...valid].sort((a, b) => a.priceA - b.priceA)[0];
+      const maxChg = [...valid].filter((r) => r.pct != null).sort((a, b) => b.pct - a.pct)[0];
+
+      $("aimagKpis").innerHTML = `
+        <div class="kpi"><div class="label">Аймаг дундаж</div><div class="value">${fmtMNT(avg)}</div><div class="sub">${valid.length} / 21 аймаг</div></div>
+        <div class="kpi"><div class="label">Хамгийн үнэтэй</div><div class="value" style="font-size:1rem">${maxR ? maxR.name : "—"}</div><div class="sub">${maxR ? fmtMNT(maxR.priceA) : ""}</div></div>
+        <div class="kpi"><div class="label">Хамгийн хямд</div><div class="value" style="font-size:1rem">${minR ? minR.name : "—"}</div><div class="sub">${minR ? fmtMNT(minR.priceA) : ""}</div></div>
+        <div class="kpi"><div class="label">Дундаж өөрчлөлт</div><div class="value chg ${chgClass(avgPct)}">${fmtPct(avgPct)}</div><div class="sub">A vs B</div></div>
+        <div class="kpi"><div class="label">Хамгийн их өссөн</div><div class="value" style="font-size:1rem">${maxChg ? maxChg.name : "—"}</div><div class="sub chg up">${maxChg ? fmtPct(maxChg.pct) : ""}</div></div>
+      `;
+
+      const byPrice = [...valid].sort((a, b) => b.priceA - a.priceA);
+      destroyChart("aimagBar");
+      charts.aimagBar = new Chart($("aimagBarChart"), {
+        type: "bar",
+        data: {
+          labels: byPrice.map((r) => r.name),
+          datasets: [{
+            label: "Үнэ A",
+            data: byPrice.map((r) => r.priceA),
+            backgroundColor: "#818cf8cc",
+            borderRadius: 4,
+            maxBarThickness: 20,
+          }],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => fmtMNT(c.raw) } },
+          },
+          scales: {
+            x: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+
+      const byChg = [...valid].filter((r) => r.pct != null).sort((a, b) => b.pct - a.pct);
+      destroyChart("aimagChg");
+      charts.aimagChg = new Chart($("aimagChgChart"), {
+        type: "bar",
+        data: {
+          labels: byChg.map((r) => r.name),
+          datasets: [{
+            label: "%",
+            data: byChg.map((r) => r.pct),
+            backgroundColor: byChg.map((r) => r.pct > 0 ? "#f87171" : r.pct < 0 ? "#4ade80" : "#94a3b8"),
+            borderRadius: 4,
+            maxBarThickness: 20,
+          }],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => fmtPct(c.raw) } },
+          },
+          scales: {
+            x: { ticks: { callback: (v) => v + "%" }, grid: { color: "rgba(42,59,85,.5)" } },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+
+      // Table
+      const sorted = [...rows].sort((a, b) => {
+        const ka = a[aimagSort.key], kb = b[aimagSort.key];
+        if (ka == null && kb == null) return 0;
+        if (ka == null) return 1;
+        if (kb == null) return -1;
+        if (typeof ka === "string") return ka.localeCompare(kb, "mn") * aimagSort.dir;
+        return (ka - kb) * aimagSort.dir;
+      });
+      const maxP = Math.max(...valid.map((r) => r.priceA), 1);
+      const tb = $("aimagTable").querySelector("tbody");
+      tb.innerHTML = sorted.map((r, i) => {
+        const w = r.priceA != null ? (r.priceA / maxP) * 100 : 0;
+        return `
+          <tr>
+            <td class="rank">${r.priceA != null ? i + 1 : "—"}</td>
+            <td>${escapeHtml(r.name)}</td>
+            <td class="num">${fmtMNT(r.priceA)}</td>
+            <td class="num">${fmtMNT(r.priceB)}</td>
+            <td class="num chg ${chgClass(r.pct)}">${r.diff == null ? "—" : (r.diff > 0 ? "+" : "") + fmtNum(r.diff)}</td>
+            <td class="num chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</td>
+            <td class="bar-cell"><div class="bar"><i style="width:${w}%"></i></div></td>
+          </tr>`;
+      }).join("");
+
+      renderHeatmap();
+    }
+
+    function renderHeatmap() {
+      const week = aimagWeeks[0]?.code;
+      const products = aimagProducts;
+      const box = $("heatMap");
+      // Find min/max per product for color scale
+      const scales = {};
+      for (const p of products) {
+        const vals = AIMAG_CODES.map((c) => aimagData[p.code]?.[c]?.[week]).filter((x) => x != null);
+        scales[p.code] = {
+          min: Math.min(...vals),
+          max: Math.max(...vals),
+        };
+      }
+
+      const cols = products.length + 1;
+      box.style.gridTemplateColumns = `120px repeat(${products.length}, minmax(56px, 1fr))`;
+      let html = `<div class="heat-cell head"></div>`;
+      for (const p of products) {
+        html += `<div class="heat-cell head" title="${escapeHtml(p.name)}">${escapeHtml(shortName(p.name))}</div>`;
+      }
+      for (const code of AIMAG_CODES) {
+        html += `<div class="heat-cell label">${escapeHtml(AIMAGS[code])}</div>`;
+        for (const p of products) {
+          const v = aimagData[p.code]?.[code]?.[week];
+          const { min, max } = scales[p.code];
+          let bg = "var(--surface2)";
+          let color = "var(--muted)";
+          if (v != null && max > min) {
+            const t = (v - min) / (max - min);
+            // blue (cheap) -> red (expensive)
+            const r = Math.round(56 + t * (248 - 56));
+            const g = Math.round(189 - t * (189 - 113));
+            const b = Math.round(248 - t * (248 - 113));
+            bg = `rgba(${r},${g},${b},0.55)`;
+            color = "var(--text)";
+          }
+          const title = v == null ? "—" : `${AIMAGS[code]} · ${p.name}: ${fmtMNT(v)}`;
+          html += `<div class="heat-cell" style="background:${bg};color:${color}" title="${escapeHtml(title)}">${v == null ? "—" : fmtNum(v, 0)}</div>`;
+        }
+      }
+      box.innerHTML = html;
+    }
+
+    // ─── Compare ──────────────────────────────────────────────
+    function renderCompare() {
+      const key = $("cmpProduct").value;
+      const sh = SHARED.find((s) => s.key === key) || SHARED[0];
+      const weekA = $("cmpWeek").value || aimagWeeks[0]?.code;
+      // Align UB week by date label
+      const weekLabel = aimagWeeks.find((w) => w.code === weekA)?.name;
+      const weekU = ubWeeks.find((w) => w.name === weekLabel)?.code || ubWeeks[0]?.code;
+
+      const aimagPrices = AIMAG_CODES.map((c) => ({
+        code: c,
+        name: AIMAGS[c],
+        price: aimagData[sh.aimag]?.[c]?.[weekA] ?? null,
+      })).filter((r) => r.price != null).sort((a, b) => a.price - b.price);
+
+      const ubPrice = ubData[sh.ub]?.[weekU] ?? null;
+      const avgA = mean(aimagPrices.map((r) => r.price));
+      const minA = aimagPrices[0];
+      const maxA = aimagPrices[aimagPrices.length - 1];
+      const vsAvg = pctChange(ubPrice, avgA);
+
+      $("cmpKpis").innerHTML = `
+        <div class="kpi"><div class="label">Улаанбаатар</div><div class="value">${fmtMNT(ubPrice)}</div><div class="sub">${weekLabel || ""}</div></div>
+        <div class="kpi"><div class="label">Аймаг дундаж</div><div class="value">${fmtMNT(avgA)}</div><div class="sub">21 аймаг</div></div>
+        <div class="kpi"><div class="label">УБ vs дундаж</div><div class="value chg ${chgClass(vsAvg)}">${fmtPct(vsAvg)}</div><div class="sub">${vsAvg != null && vsAvg > 0 ? "УБ илүү үнэтэй" : vsAvg != null && vsAvg < 0 ? "УБ хямд" : ""}</div></div>
+        <div class="kpi"><div class="label">Хамгийн хямд аймаг</div><div class="value" style="font-size:1rem">${minA ? minA.name : "—"}</div><div class="sub">${minA ? fmtMNT(minA.price) : ""}</div></div>
+        <div class="kpi"><div class="label">Хамгийн үнэтэй аймаг</div><div class="value" style="font-size:1rem">${maxA ? maxA.name : "—"}</div><div class="sub">${maxA ? fmtMNT(maxA.price) : ""}</div></div>
+      `;
+
+      const labels = ["Улаанбаатар", ...aimagPrices.map((r) => r.name)];
+      const data = [ubPrice, ...aimagPrices.map((r) => r.price)];
+      const colors = ["#fbbf24", ...aimagPrices.map(() => "#38bdf8")];
+
+      destroyChart("cmp");
+      charts.cmp = new Chart($("cmpChart"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: colors,
+            borderRadius: 4,
+            maxBarThickness: 18,
+          }],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => fmtMNT(c.raw) } },
+          },
+          scales: {
+            x: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+
+      // Table all shared products
+      const tb = $("cmpTable").querySelector("tbody");
+      tb.innerHTML = SHARED.map((s) => {
+        const prices = AIMAG_CODES.map((c) => ({
+          name: AIMAGS[c],
+          price: aimagData[s.aimag]?.[c]?.[weekA] ?? null,
+        })).filter((r) => r.price != null);
+        const avg = mean(prices.map((r) => r.price));
+        const ub = ubData[s.ub]?.[weekU] ?? null;
+        const pct = pctChange(ub, avg);
+        const mn = [...prices].sort((a, b) => a.price - b.price)[0];
+        const mx = [...prices].sort((a, b) => b.price - a.price)[0];
+        return `
+          <tr>
+            <td>${escapeHtml(s.label)}</td>
+            <td class="num">${fmtMNT(ub)}</td>
+            <td class="num">${fmtMNT(avg)}</td>
+            <td class="num chg ${chgClass(pct)}">${fmtPct(pct)}</td>
+            <td class="num">${mn ? escapeHtml(mn.name) + " · " + fmtMNT(mn.price) : "—"}</td>
+            <td class="num">${mx ? escapeHtml(mx.name) + " · " + fmtMNT(mx.price) : "—"}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    // ─── Trend multi ──────────────────────────────────────────
+    function renderTrend() {
+      const source = $("trSource").value;
+      const win = $("trWindow").value;
+      const selected = [...$("trProducts").selectedOptions].map((o) => o.value);
+      if (!selected.length) {
+        destroyChart("trIdx");
+        destroyChart("trPrice");
+        return;
+      }
+
+      let weeks = source === "ub" ? ubWeeks.slice() : aimagWeeks.slice();
+      if (win !== "all") weeks = weeks.slice(0, Number(win));
+      const chron = [...weeks].reverse();
+      const labels = chron.map((w) => w.name);
+      const aimagCode = $("trAimag").value || AIMAG_CODES[0];
+      const prodList = source === "ub" ? ubProducts : aimagProducts;
+
+      const datasetsPrice = [];
+      const datasetsIdx = [];
+      selected.forEach((code, i) => {
+        const name = prodList.find((p) => p.code === code)?.name || code;
+        const series = chron.map((w) => {
+          if (source === "ub") return ubData[code]?.[w.code] ?? null;
+          return aimagData[code]?.[aimagCode]?.[w.code] ?? null;
+        });
+        const color = CHART_COLORS[i % CHART_COLORS.length];
+        datasetsPrice.push({
+          label: shortName(name),
+          data: series,
+          borderColor: color,
+          backgroundColor: color + "33",
+          tension: 0.25,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+        });
+        const base = series.find((x) => x != null);
+        const idx = series.map((v) => (v != null && base ? (v / base) * 100 : null));
+        datasetsIdx.push({
+          label: shortName(name),
+          data: idx,
+          borderColor: color,
+          backgroundColor: color + "33",
+          tension: 0.25,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+        });
+      });
+
+      destroyChart("trIdx");
+      charts.trIdx = new Chart($("trIndexChart"), {
+        type: "line",
+        data: { labels, datasets: datasetsIdx },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw == null ? "—" : c.raw.toFixed(1)}` } },
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 12, font: { size: 10 } }, grid: { display: false } },
+            y: {
+              title: { display: true, text: "Индекс (эхлэл=100)" },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+
+      destroyChart("trPrice");
+      charts.trPrice = new Chart($("trPriceChart"), {
+        type: "line",
+        data: { labels, datasets: datasetsPrice },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${fmtMNT(c.raw)}` } },
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 12, font: { size: 10 } }, grid: { display: false } },
+            y: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+    }
+
+    // ─── Events ───────────────────────────────────────────────
+    function bindEvents() {
+      $("btnRefresh").addEventListener("click", () => init(true));
+      $("ovProduct").addEventListener("change", renderOvBar);
+      $("ubApply").addEventListener("click", renderUb);
+      $("ubProduct").addEventListener("change", renderUb);
+      $("ubWindow").addEventListener("change", renderUb);
+      $("ubSearch").addEventListener("input", renderUbAllTable);
+      $("aimagApply").addEventListener("click", renderAimag);
+      $("aimagProduct").addEventListener("change", renderAimag);
+      $("cmpApply").addEventListener("click", renderCompare);
+      $("cmpProduct").addEventListener("change", renderCompare);
+      $("cmpWeek").addEventListener("change", renderCompare);
+      $("trApply").addEventListener("click", renderTrend);
+      $("trSource").addEventListener("change", () => {
+        const src = $("trSource").value;
+        $("trAimagField").style.display = src === "aimag" ? "" : "none";
+        fillTrProducts(src);
+        [...$("trProducts").options].slice(0, 3).forEach((o) => { o.selected = true; });
+        renderTrend();
+      });
+
+      $("ubAllTable").querySelectorAll("th[data-k]").forEach((th) => {
+        th.addEventListener("click", () => {
+          const k = th.dataset.k;
+          if (ubSort.key === k) ubSort.dir *= -1;
+          else { ubSort.key = k; ubSort.dir = k === "name" ? 1 : -1; }
+          renderUbAllTable();
+        });
+      });
+      $("aimagTable").querySelectorAll("th[data-k]").forEach((th) => {
+        th.addEventListener("click", () => {
+          const k = th.dataset.k;
+          if (aimagSort.key === k) aimagSort.dir *= -1;
+          else { aimagSort.key = k; aimagSort.dir = k === "name" ? 1 : -1; }
+          renderAimag();
+        });
+      });
+    }
+
+    // ─── Init ─────────────────────────────────────────────────
+    let eventsBound = false;
+    async function init() {
+      clearError();
+      showLoading("1212.mn API-тай холбогдож байна…");
+      try {
+        chartDefaults();
+        await loadAllData();
+        setupControls();
+        if (!eventsBound) {
+          setupTabs();
+          bindEvents();
+          eventsBound = true;
+        }
+        // Re-render active panel
+        const active = document.querySelector(".tab.active")?.dataset.tab || "overview";
+        if (active === "overview") renderOverview();
+        else if (active === "ub") renderUb();
+        else if (active === "aimag") renderAimag();
+        else if (active === "compare") renderCompare();
+        else if (active === "trend") renderTrend();
+        hideLoading();
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        showError(
+          "1212.mn API-тай холбогдож чадсангүй. Интернэт холболт болон CORS-ийг шалгана уу. " +
+          "GitHub Pages дээр эсвэл локал серверээр (python -m http.server) нээнэ үү. " +
+          "Дэлгэрэнгүй: " + (err && err.message ? err.message : err)
+        );
+      }
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
