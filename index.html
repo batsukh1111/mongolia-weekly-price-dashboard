@@ -349,6 +349,85 @@
       background: rgba(56, 189, 248, 0.12) !important;
       outline: 1px solid rgba(56, 189, 248, 0.35);
     }
+    table.data tbody tr.clickable { cursor: pointer; }
+    table.data tbody tr.selected {
+      background: rgba(129, 140, 248, 0.14) !important;
+      box-shadow: inset 3px 0 0 var(--accent2);
+    }
+
+    /* UB product cards */
+    .ub-cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.55rem;
+      margin-bottom: 0.9rem;
+    }
+    .ub-cat-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.7rem 0.8rem; cursor: pointer;
+      transition: .15s ease; min-height: 88px;
+    }
+    .ub-cat-card:hover { border-color: #4b658a; transform: translateY(-1px); }
+    .ub-cat-card.active {
+      border-color: var(--accent); box-shadow: 0 0 0 1px rgba(56,189,248,.45);
+      background: linear-gradient(160deg, rgba(56,189,248,.12), var(--surface2));
+    }
+    .ub-cat-card .cat-name { font-weight: 750; font-size: 0.86rem; margin-bottom: 0.2rem; }
+    .ub-cat-card .cat-meta { font-size: 0.7rem; color: var(--muted); }
+    .ub-cat-card .cat-pct { font-weight: 750; font-size: 0.95rem; margin-top: 0.25rem; }
+
+    .ub-prod-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .ub-prod-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 11px; padding: 0.65rem 0.75rem; cursor: pointer;
+      transition: .12s ease;
+    }
+    .ub-prod-card:hover { border-color: #4b658a; }
+    .ub-prod-card.active {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 1px rgba(129,140,248,.5);
+      background: rgba(129,140,248,.1);
+    }
+    .ub-prod-card .pn { font-size: 0.8rem; font-weight: 650; line-height: 1.3; min-height: 2.1em; }
+    .ub-prod-card .pp { font-size: 1.05rem; font-weight: 750; margin: 0.2rem 0 0.1rem; }
+    .ub-prod-card .pm { font-size: 0.72rem; color: var(--muted); display: flex; justify-content: space-between; gap: 0.4rem; }
+
+    .spark {
+      display: inline-flex; align-items: flex-end; gap: 1px; height: 22px;
+      vertical-align: middle;
+    }
+    .spark i {
+      display: block; width: 3px; border-radius: 1px 1px 0 0;
+      background: #64748b; min-height: 2px;
+    }
+    .spark i.up { background: #f87171; }
+    .spark i.down { background: #4ade80; }
+    .spark i.mid { background: #38bdf8; }
+
+    .ub-subtabs {
+      display: flex; flex-wrap: wrap; gap: 0.35rem;
+      margin-bottom: 0.85rem;
+    }
+    .ub-subtab {
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); border-radius: 999px; padding: 0.4rem 0.85rem;
+      font: inherit; font-size: 0.8rem; font-weight: 650; cursor: pointer;
+    }
+    .ub-subtab.active { background: rgba(56,189,248,.15); color: #7dd3fc; border-color: rgba(56,189,248,.4); }
+    .ub-sub { display: none; }
+    .ub-sub.active { display: block; animation: fade .2s ease; }
+
+    .stat-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.35rem 0 0.6rem; }
+    .stat-pill {
+      font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 999px;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    }
+    .stat-pill b { color: var(--text); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -501,55 +580,194 @@
 
     <!-- ═══════ UB ═══════ -->
     <section class="panel" id="panel-ub">
-      <div class="controls">
-        <div class="field" style="flex:2">
-          <label>Бүтээгдэхүүн</label>
-          <select id="ubProduct"></select>
-        </div>
-        <div class="field">
-          <label>Хугацааны цонх</label>
-          <select id="ubWindow">
-            <option value="12">Сүүлийн 12 7-хоног</option>
-            <option value="26" selected>Сүүлийн 26 7-хоног (~6 сар)</option>
-            <option value="52">Сүүлийн 52 7-хоног (~жил)</option>
-            <option value="all">Бүх хугацаа</option>
-          </select>
-        </div>
-        <button class="btn primary" id="ubApply">Харуулах</button>
+      <div class="split-note">
+        <strong>Нийслэл — дэлгэрэнгүй жагсаалт.</strong>
+        Улаанбаатарт бүтээгдэхүүний нэр төрөл аймгаас илүү олон (гурил 3 зэрэг, талх, мах, цагаан идээ, ногоо, шатахуун…).
+        Эх: <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_001V4.px" target="_blank" rel="noopener">DT_NSO_0600_001V4</a>
+        · 7 хоног бүр шинэчлэгдэнэ.
       </div>
-      <div class="chip-row" id="ubChips"></div>
-      <div class="kpi-grid" id="ubKpis"></div>
-      <div class="grid-2">
-        <div class="card">
-          <h2>Үнийн чиг хандлага <span class="hint" id="ubChartTitle"></span></h2>
-          <div class="chart-box lg"><canvas id="ubTrendChart"></canvas></div>
-        </div>
-        <div class="card">
-          <h2>7 хоногийн өөрчлөлт (%)</h2>
-          <div class="chart-box lg"><canvas id="ubChgChart"></canvas></div>
-        </div>
+
+      <div class="ub-subtabs" id="ubSubtabs">
+        <button type="button" class="ub-subtab active" data-sub="dash">Ерөнхий самбар</button>
+        <button type="button" class="ub-subtab" data-sub="detail">Бүтээгдэхүүний дэлгэрэнгүй</button>
+        <button type="button" class="ub-subtab" data-sub="table">Бүх жагсаалт</button>
+        <button type="button" class="ub-subtab" data-sub="multi">Олон бүтээгдэхүүн</button>
       </div>
-      <div class="card">
-        <h2>Бүх бүтээгдэхүүн — сүүлийн 2 7-хоног</h2>
-        <div class="controls">
-          <div class="field">
-            <label>Хайх</label>
-            <input type="search" id="ubSearch" placeholder="жнь: мах, гурил, бензин…" />
+
+      <!-- UB sub: dashboard -->
+      <div class="ub-sub active" id="ubSub-dash">
+        <div class="kpi-grid" id="ubDashKpis"></div>
+        <div class="ub-cat-grid" id="ubCatGrid"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Хамгийн их өссөн (7 хоног) <span class="hint">топ 8</span></h2>
+            <div class="table-wrap" style="max-height:320px">
+              <table class="data" id="ubTopUpTable">
+                <thead><tr><th>#</th><th>Бүтээгдэхүүн</th><th class="num">Үнэ</th><th class="num">%</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Хамгийн их буурсан (7 хоног) <span class="hint">топ 8</span></h2>
+            <div class="table-wrap" style="max-height:320px">
+              <table class="data" id="ubTopDownTable">
+                <thead><tr><th>#</th><th>Бүтээгдэхүүн</th><th class="num">Үнэ</th><th class="num">%</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div class="table-wrap">
-          <table class="data" id="ubAllTable">
-            <thead>
-              <tr>
-                <th data-k="name">Бүтээгдэхүүн</th>
-                <th class="num" data-k="price">Үнэ (₮)</th>
-                <th class="num" data-k="prev">Өмнөх 7 хоног</th>
-                <th class="num" data-k="diff">Зөрүү</th>
-                <th class="num" data-k="pct">%</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="card">
+          <h2>Ангиллын үнийн түвшин <span class="hint" id="ubCatChartHint">сонгосон ангилал</span></h2>
+          <div class="chart-box lg"><canvas id="ubCatChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Ангиллаар дундаж өөрчлөлт (%) <span class="hint">7 хоног</span></h2>
+          <div class="chart-box sm"><canvas id="ubCatChgChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- UB sub: product detail -->
+      <div class="ub-sub" id="ubSub-detail">
+        <div class="controls">
+          <div class="field" style="flex:2">
+            <label>Бүтээгдэхүүн</label>
+            <select id="ubProduct"></select>
+          </div>
+          <div class="field">
+            <label>Хугацааны цонх</label>
+            <select id="ubWindow">
+              <option value="12">Сүүлийн 12 7-хоног</option>
+              <option value="26" selected>Сүүлийн 26 7-хоног (~6 сар)</option>
+              <option value="52">Сүүлийн 52 7-хоног (~жил)</option>
+              <option value="all">Бүх (ачаалсан)</option>
+            </select>
+          </div>
+          <button class="btn primary" id="ubApply">Харуулах</button>
+        </div>
+        <div class="chip-row" id="ubChips"></div>
+        <div class="ub-prod-grid" id="ubProdGrid"></div>
+        <div class="kpi-grid" id="ubKpis"></div>
+        <div class="stat-pills" id="ubStatPills"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Үнийн чиг хандлага <span class="hint" id="ubChartTitle"></span></h2>
+            <div class="chart-box lg"><canvas id="ubTrendChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h2>7 хоногийн өөрчлөлт (%)</h2>
+            <div class="chart-box lg"><canvas id="ubChgChart"></canvas></div>
+          </div>
+        </div>
+        <div class="grid-2" id="ubVsAimagWrap" style="display:none">
+          <div class="card">
+            <h2>УБ vs аймгийн дундаж <span class="hint">нийтлэг бүтээгдэхүүн</span></h2>
+            <div class="chart-box"><canvas id="ubVsAimagChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h2>УБ-ийн байршил <span class="hint">аймгуудын дунд</span></h2>
+            <div class="kpi-grid" id="ubVsAimagKpis" style="margin:0"></div>
+            <div class="chart-box sm"><canvas id="ubRankChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Долоо хоногийн түүх <span class="hint" id="ubHistHint"></span></h2>
+          <div class="table-wrap" style="max-height:380px">
+            <table class="data" id="ubHistTable">
+              <thead>
+                <tr>
+                  <th>Огноо</th>
+                  <th class="num">Үнэ (₮)</th>
+                  <th class="num">Өмнөхөөс</th>
+                  <th class="num">%</th>
+                  <th class="num">Цонхны оргилоос</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- UB sub: full table -->
+      <div class="ub-sub" id="ubSub-table">
+        <div class="controls">
+          <div class="field" style="flex:1.2">
+            <label>Хайх</label>
+            <input type="search" id="ubSearch" placeholder="жнь: мах, гурил, бензин, төмс…" />
+          </div>
+          <div class="field">
+            <label>Ангилал</label>
+            <select id="ubTableCat">
+              <option value="">Бүгд</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Эрэмбэ</label>
+            <select id="ubTableSort">
+              <option value="pct">7 хоногийн %</option>
+              <option value="pct4">4 7-хоногийн %</option>
+              <option value="pct12">12 7-хоногийн %</option>
+              <option value="price">Үнэ (өндөр→бага)</option>
+              <option value="name">Нэр (А→Я)</option>
+            </select>
+          </div>
+        </div>
+        <div class="stat-pills" id="ubTablePills"></div>
+        <div class="card">
+          <h2>Бүх бүтээгдэхүүн — олон хугацааны харьцуулалт <span class="hint">мөр дээр дарж дэлгэрэнгүй рүү шилжинэ</span></h2>
+          <div class="table-wrap" style="max-height:620px">
+            <table class="data" id="ubAllTable">
+              <thead>
+                <tr>
+                  <th data-k="name">Бүтээгдэхүүн</th>
+                  <th class="num" data-k="price">Үнэ</th>
+                  <th class="num" data-k="pct">7 хоног %</th>
+                  <th class="num" data-k="pct4">4×7х %</th>
+                  <th class="num" data-k="pct12">12×7х %</th>
+                  <th data-k="price">Чиглэл</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="mini-legend">
+            <span class="l-up">Өссөн</span>
+            <span class="l-down">Буурсан</span>
+            <span class="l-flat">Бараг өөрчлөгдөөгүй</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- UB sub: multi product compare -->
+      <div class="ub-sub" id="ubSub-multi">
+        <div class="controls">
+          <div class="field" style="flex:2">
+            <label>Бүтээгдэхүүнүүд (Ctrl/Cmd — олон сонгох)</label>
+            <select id="ubMultiProducts" multiple size="8" style="min-height:160px"></select>
+          </div>
+          <div class="field">
+            <label>Цонх</label>
+            <select id="ubMultiWindow">
+              <option value="12">12 7-хоног</option>
+              <option value="26" selected>26 7-хоног</option>
+              <option value="52">52 7-хоног</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Харуулах</label>
+            <select id="ubMultiMode">
+              <option value="index" selected>Индекс (эхлэл=100)</option>
+              <option value="price">Нэрлэсэн үнэ (₮)</option>
+            </select>
+          </div>
+          <button class="btn primary" id="ubMultiApply">Зурах</button>
+        </div>
+        <div class="chip-row" id="ubMultiChips"></div>
+        <div class="card">
+          <h2>Олон бүтээгдэхүүний харьцуулалт <span class="hint">ижил масштабд харьцуулахдаа индекс ашиглана</span></h2>
+          <div class="chart-box lg"><canvas id="ubMultiChart"></canvas></div>
         </div>
       </div>
     </section>
@@ -1270,31 +1488,74 @@
         $("mapWeekB").value = aimagWeeks[1].code;
       }
 
-      // UB chips — quick categories
+      // UB chips — quick categories (detail view)
       const chips = [
+        { q: "", label: "Бүгд" },
         { q: "мах", label: "Мах" },
         { q: "гурил", label: "Гурил" },
         { q: "талх", label: "Талх" },
-        { q: "сүү", label: "Сүү/цагаан идээ" },
-        { q: "ногоо|төмс|лууван|байцаа|сонгино|манжин", label: "Ногоо" },
+        { q: "сүү|тараг|цөцгийн", label: "Сүү/цагаан идээ" },
+        { q: "төмс|лууван|байцаа|сонгино|манжин|алим", label: "Ногоо/жимс" },
+        { q: "будаа|чихэр|тос|өндөг|цай", label: "Үндсэн" },
         { q: "бензин|дизель|аи-", label: "Шатахуун" },
-        { q: "", label: "Бүгд" },
       ];
       const chipBox = $("ubChips");
       chipBox.innerHTML = "";
       chips.forEach((c, i) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "chip" + (i === chips.length - 1 ? " active" : "");
+        b.className = "chip" + (i === 0 ? " active" : "");
         b.textContent = c.label;
         b.dataset.q = c.q;
         b.addEventListener("click", () => {
           chipBox.querySelectorAll(".chip").forEach((x) => x.classList.remove("active"));
           b.classList.add("active");
           filterUbProductSelect(c.q);
+          if (ubActiveSub === "detail") renderUbDetail();
         });
         chipBox.appendChild(b);
       });
+
+      // Multi chips (same categories → select matching products)
+      const multiChips = $("ubMultiChips");
+      if (multiChips) {
+        multiChips.innerHTML = "";
+        chips.forEach((c) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "chip";
+          b.textContent = c.label || "Бүгд";
+          b.addEventListener("click", () => {
+            const sel = $("ubMultiProducts");
+            const re = c.q ? new RegExp(c.q, "i") : null;
+            [...sel.options].forEach((opt) => {
+              opt.selected = !re || re.test(opt.textContent);
+            });
+            // limit to 8 for readability
+            let n = 0;
+            [...sel.options].forEach((opt) => {
+              if (opt.selected) {
+                n++;
+                if (n > 8) opt.selected = false;
+              }
+            });
+            renderUbMulti();
+          });
+          multiChips.appendChild(b);
+        });
+      }
+
+      // Table category select
+      const tableCat = $("ubTableCat");
+      if (tableCat) {
+        tableCat.innerHTML = UB_CATEGORIES.map(
+          (c) => `<option value="${c.id === "all" ? "" : c.id}">${c.label}</option>`
+        ).join("");
+      }
+
+      // Multi product select
+      fillSelect($("ubMultiProducts"), ubProducts, (p) => ({ value: p.code, label: p.name }));
+      [...$("ubMultiProducts").options].slice(0, 4).forEach((o) => { o.selected = true; });
 
       // Trend multi-select defaults: first 3 ub products
       fillTrProducts("ub");
@@ -1311,9 +1572,8 @@
         opt.hidden = !show;
         if (show && !first) first = opt;
       });
-      if (first) {
+      if (first && re) {
         sel.value = first.value;
-        renderUb();
       }
     }
 
@@ -1516,15 +1776,259 @@
     }
 
     // ─── UB panel ─────────────────────────────────────────────
+    const UB_CATEGORIES = [
+      { id: "all", label: "Бүгд", re: null },
+      { id: "flour", label: "Гурил", re: /гурил/i },
+      { id: "bread", label: "Талх", re: /талх/i },
+      { id: "meat", label: "Мах", re: /мах/i },
+      { id: "dairy", label: "Сүү / цагаан идээ", re: /сүү|тараг|цөцгийн/i },
+      { id: "veg", label: "Ногоо / жимс", re: /төмс|лууван|байцаа|манжин|сонгино|алим/i },
+      { id: "staple", label: "Үндсэн хүнс", re: /будаа|чихэр|тос|өндөг|цай/i },
+      { id: "fuel", label: "Шатахуун", re: /бензин|дизель|аи-/i },
+    ];
+    let ubActiveCat = "all";
+    let ubActiveSub = "dash";
+    let ubSort = { key: "pct", dir: -1 };
+
+    function ubPriceAt(code, weekOffset) {
+      const w = ubWeeks[weekOffset];
+      if (!w) return null;
+      return ubData[code]?.[w.code] ?? null;
+    }
+
+    function ubSeries(code, n) {
+      const count = Math.min(n || 12, ubWeeks.length);
+      // oldest -> newest for sparkline
+      return ubWeeks.slice(0, count).map((w) => ubData[code]?.[w.code] ?? null).reverse();
+    }
+
+    function ubProductRows() {
+      return ubProducts.map((p) => {
+        const price = ubPriceAt(p.code, 0);
+        const prev = ubPriceAt(p.code, 1);
+        const w4 = ubPriceAt(p.code, 4);
+        const w12 = ubPriceAt(p.code, 12);
+        return {
+          code: p.code,
+          name: p.name,
+          price,
+          prev,
+          diff: price != null && prev != null ? price - prev : null,
+          pct: pctChange(price, prev),
+          pct4: pctChange(price, w4),
+          pct12: pctChange(price, w12),
+          spark: ubSeries(p.code, 12),
+        };
+      });
+    }
+
+    function ubCatOf(name) {
+      for (const c of UB_CATEGORIES) {
+        if (c.id === "all" || !c.re) continue;
+        if (c.re.test(name)) return c;
+      }
+      return { id: "other", label: "Бусад", re: null };
+    }
+
+    function filterByUbCat(rows, catId) {
+      if (!catId || catId === "all") return rows;
+      const cat = UB_CATEGORIES.find((c) => c.id === catId);
+      if (!cat || !cat.re) return rows;
+      return rows.filter((r) => cat.re.test(r.name));
+    }
+
+    function sparkHtml(values) {
+      const nums = values.filter((v) => v != null);
+      if (!nums.length) return "";
+      const min = Math.min(...nums);
+      const max = Math.max(...nums);
+      const first = nums[0];
+      const last = nums[nums.length - 1];
+      const trend = last > first ? "up" : last < first ? "down" : "mid";
+      return `<span class="spark" title="сүүлийн ${values.length} 7-хоног">${values.map((v) => {
+        if (v == null) return `<i style="height:2px;opacity:.3"></i>`;
+        const h = max === min ? 12 : 4 + ((v - min) / (max - min)) * 18;
+        return `<i class="${trend}" style="height:${h.toFixed(1)}px"></i>`;
+      }).join("")}</span>`;
+    }
+
+    function setUbSub(sub) {
+      ubActiveSub = sub;
+      document.querySelectorAll(".ub-subtab").forEach((t) => {
+        t.classList.toggle("active", t.dataset.sub === sub);
+      });
+      document.querySelectorAll(".ub-sub").forEach((el) => {
+        el.classList.toggle("active", el.id === "ubSub-" + sub);
+      });
+      renderUb();
+    }
+
     function renderUb() {
+      if (ubActiveSub === "dash") renderUbDash();
+      else if (ubActiveSub === "detail") renderUbDetail();
+      else if (ubActiveSub === "table") renderUbAllTable();
+      else if (ubActiveSub === "multi") renderUbMulti();
+    }
+
+    function renderUbDash() {
+      const rows = ubProductRows().filter((r) => r.price != null);
+      const up = rows.filter((r) => r.pct != null && r.pct > 0.05);
+      const down = rows.filter((r) => r.pct != null && r.pct < -0.05);
+      const flat = rows.filter((r) => r.pct != null && Math.abs(r.pct) <= 0.05);
+      const avgPct = mean(rows.map((r) => r.pct));
+      const avg4 = mean(rows.map((r) => r.pct4));
+      const avg12 = mean(rows.map((r) => r.pct12));
+
+      $("ubDashKpis").innerHTML = `
+        <div class="kpi"><div class="label">Бүтээгдэхүүн</div><div class="value">${rows.length}</div><div class="sub">нийслэлийн 7 хоногийн үнэ</div></div>
+        <div class="kpi"><div class="label">Сүүлийн 7 хоног</div><div class="value" style="font-size:1.05rem">${ubWeeks[0]?.name || "—"}</div><div class="sub">шинэчлэгдсэн</div></div>
+        <div class="kpi"><div class="label">Дундаж өөрчлөлт (7х)</div><div class="value chg ${chgClass(avgPct)}">${fmtPct(avgPct)}</div><div class="sub">өсөлт ${up.length} · бууралт ${down.length} · тогтвортой ${flat.length}</div></div>
+        <div class="kpi"><div class="label">4×7 хоногийн дундаж</div><div class="value chg ${chgClass(avg4)}">${fmtPct(avg4)}</div><div class="sub">~1 сар</div></div>
+        <div class="kpi"><div class="label">12×7 хоногийн дундаж</div><div class="value chg ${chgClass(avg12)}">${fmtPct(avg12)}</div><div class="sub">~3 сар</div></div>
+        <div class="kpi"><div class="label">Хамгийн их өссөн</div><div class="value" style="font-size:.92rem">${(() => { const t=[...rows].filter(r=>r.pct!=null).sort((a,b)=>b.pct-a.pct)[0]; return t?escapeHtml(shortName(t.name)):"—"; })()}</div><div class="sub chg up">${(() => { const t=[...rows].filter(r=>r.pct!=null).sort((a,b)=>b.pct-a.pct)[0]; return t?fmtPct(t.pct)+" · "+fmtMNT(t.price):""; })()}</div></div>
+      `;
+
+      // Category cards
+      const catBox = $("ubCatGrid");
+      catBox.innerHTML = UB_CATEGORIES.map((c) => {
+        const subset = c.id === "all" ? rows : rows.filter((r) => c.re && c.re.test(r.name));
+        const ap = mean(subset.map((r) => r.pct));
+        const active = ubActiveCat === c.id ? " active" : "";
+        return `<div class="ub-cat-card${active}" data-cat="${c.id}">
+          <div class="cat-name">${escapeHtml(c.label)}</div>
+          <div class="cat-meta">${subset.length} бүтээгдэхүүн</div>
+          <div class="cat-pct chg ${chgClass(ap)}">${fmtPct(ap)}</div>
+        </div>`;
+      }).join("");
+      catBox.querySelectorAll(".ub-cat-card").forEach((el) => {
+        el.addEventListener("click", () => {
+          ubActiveCat = el.dataset.cat;
+          renderUbDash();
+        });
+      });
+
+      const filtered = filterByUbCat(rows, ubActiveCat);
+      const catLabel = UB_CATEGORIES.find((c) => c.id === ubActiveCat)?.label || "Бүгд";
+      $("ubCatChartHint").textContent = catLabel;
+
+      // Top up / down
+      const topUp = [...rows].filter((r) => r.pct != null).sort((a, b) => b.pct - a.pct).slice(0, 8);
+      const topDown = [...rows].filter((r) => r.pct != null).sort((a, b) => a.pct - b.pct).slice(0, 8);
+      const fillTop = (id, list) => {
+        $(id).querySelector("tbody").innerHTML = list.map((r, i) => `
+          <tr class="clickable" data-code="${r.code}">
+            <td class="rank">${i + 1}</td>
+            <td>${escapeHtml(r.name)}</td>
+            <td class="num">${fmtMNT(r.price)}</td>
+            <td class="num chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</td>
+          </tr>`).join("") || `<tr><td colspan="4" class="empty">—</td></tr>`;
+        $(id).querySelectorAll("tr[data-code]").forEach((tr) => {
+          tr.addEventListener("click", () => {
+            $("ubProduct").value = tr.dataset.code;
+            setUbSub("detail");
+          });
+        });
+      };
+      fillTop("ubTopUpTable", topUp);
+      fillTop("ubTopDownTable", topDown);
+
+      // Category product price bars
+      const byPrice = [...filtered].sort((a, b) => (b.price || 0) - (a.price || 0));
+      destroyChart("ubCat");
+      charts.ubCat = new Chart($("ubCatChart"), {
+        type: "bar",
+        data: {
+          labels: byPrice.map((r) => shortName(r.name)),
+          datasets: [{
+            label: "Үнэ",
+            data: byPrice.map((r) => r.price),
+            backgroundColor: byPrice.map((r) => {
+              const c = chgClass(r.pct);
+              return c === "up" ? "#f87171aa" : c === "down" ? "#4ade80aa" : "#38bdf8aa";
+            }),
+            borderRadius: 4,
+            maxBarThickness: 22,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => byPrice[items[0].dataIndex]?.name || "",
+                label: (c) => {
+                  const r = byPrice[c.dataIndex];
+                  return `${fmtMNT(c.raw)} · 7х: ${fmtPct(r?.pct)}`;
+                },
+              },
+            },
+          },
+          onClick: (_e, els) => {
+            if (!els.length) return;
+            const r = byPrice[els[0].index];
+            if (r) { $("ubProduct").value = r.code; setUbSub("detail"); }
+          },
+          scales: {
+            x: { ticks: { maxRotation: 50, minRotation: 30, font: { size: 9 } }, grid: { display: false } },
+            y: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+
+      // Avg change by category
+      const catStats = UB_CATEGORIES.filter((c) => c.id !== "all").map((c) => {
+        const sub = rows.filter((r) => c.re && c.re.test(r.name));
+        return { label: c.label, pct: mean(sub.map((r) => r.pct)), n: sub.length };
+      }).filter((c) => c.n > 0);
+      destroyChart("ubCatChg");
+      charts.ubCatChg = new Chart($("ubCatChgChart"), {
+        type: "bar",
+        data: {
+          labels: catStats.map((c) => c.label),
+          datasets: [{
+            data: catStats.map((c) => c.pct),
+            backgroundColor: catStats.map((c) =>
+              c.pct == null ? "#94a3b8" : c.pct > 0 ? "#f87171" : c.pct < 0 ? "#4ade80" : "#94a3b8"
+            ),
+            borderRadius: 6,
+            maxBarThickness: 36,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (c) => `${fmtPct(c.raw)} · ${catStats[c.dataIndex].n} бараа`,
+              },
+            },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { ticks: { callback: (v) => v + "%" }, grid: { color: "rgba(42,59,85,.5)" } },
+          },
+        },
+      });
+    }
+
+    function renderUbDetail() {
       const pCode = $("ubProduct").value || ubProducts[0]?.code;
       const win = $("ubWindow").value;
       const pName = ubProducts.find((p) => p.code === pCode)?.name || "";
       $("ubChartTitle").textContent = pName;
 
+      // Product cards for active category filter (chips)
+      renderUbProdGrid(pCode);
+
       let weeks = ubWeeks.slice();
       if (win !== "all") weeks = weeks.slice(0, Number(win));
-      // chronological for charts
       const chron = [...weeks].reverse();
       const series = chron.map((w) => ubData[pCode]?.[w.code] ?? null);
       const labels = chron.map((w) => w.name);
@@ -1532,16 +2036,36 @@
       const cur = series[series.length - 1];
       const prev = series.length > 1 ? series[series.length - 2] : null;
       const first = series.find((x) => x != null);
+      const w4 = ubPriceAt(pCode, 4);
+      const w12 = ubPriceAt(pCode, 12);
+      const w26 = ubPriceAt(pCode, 26);
       const pctW = pctChange(cur, prev);
       const pctP = pctChange(cur, first);
-      const maxV = Math.max(...series.filter((x) => x != null));
-      const minV = Math.min(...series.filter((x) => x != null));
+      const pct4 = pctChange(cur, w4);
+      const pct12 = pctChange(cur, w12);
+      const pct26 = pctChange(cur, w26);
+      const validS = series.filter((x) => x != null);
+      const maxV = validS.length ? Math.max(...validS) : null;
+      const minV = validS.length ? Math.min(...validS) : null;
+      const avgV = mean(validS);
+      const maxIdx = series.lastIndexOf(maxV);
+      const minIdx = series.lastIndexOf(minV);
 
       $("ubKpis").innerHTML = `
         <div class="kpi"><div class="label">Одоогийн үнэ</div><div class="value">${fmtMNT(cur)}</div><div class="sub">${ubWeeks[0]?.name || ""}</div></div>
-        <div class="kpi"><div class="label">7 хоногийн өөрчлөлт</div><div class="value chg ${chgClass(pctW)}">${fmtPct(pctW)}</div><div class="sub">${prev != null ? fmtMNT(prev) + " → " + fmtMNT(cur) : ""}</div></div>
-        <div class="kpi"><div class="label">Цонхны өөрчлөлт</div><div class="value chg ${chgClass(pctP)}">${fmtPct(pctP)}</div><div class="sub">эхний цэгтэй харьцуулсан</div></div>
-        <div class="kpi"><div class="label">Дээд / доод (цонх)</div><div class="value" style="font-size:1rem">${fmtMNT(maxV)}</div><div class="sub">мин: ${fmtMNT(minV)}</div></div>
+        <div class="kpi"><div class="label">7 хоног</div><div class="value chg ${chgClass(pctW)}">${fmtPct(pctW)}</div><div class="sub">${prev != null ? fmtMNT(prev) + " → " + fmtMNT(cur) : ""}</div></div>
+        <div class="kpi"><div class="label">~1 сар (4×7х)</div><div class="value chg ${chgClass(pct4)}">${fmtPct(pct4)}</div><div class="sub">${w4 != null ? fmtMNT(w4) : "—"}</div></div>
+        <div class="kpi"><div class="label">~3 сар (12×7х)</div><div class="value chg ${chgClass(pct12)}">${fmtPct(pct12)}</div><div class="sub">${w12 != null ? fmtMNT(w12) : "—"}</div></div>
+        <div class="kpi"><div class="label">~6 сар (26×7х)</div><div class="value chg ${chgClass(pct26)}">${fmtPct(pct26)}</div><div class="sub">${w26 != null ? fmtMNT(w26) : "—"}</div></div>
+        <div class="kpi"><div class="label">Цонхны дундаж</div><div class="value" style="font-size:1.05rem">${fmtMNT(avgV)}</div><div class="sub">дээд ${fmtMNT(maxV)} · доод ${fmtMNT(minV)}</div></div>
+      `;
+
+      $("ubStatPills").innerHTML = `
+        <span class="stat-pill">Оргил: <b>${fmtMNT(maxV)}</b> ${maxIdx >= 0 ? "(" + labels[maxIdx] + ")" : ""}</span>
+        <span class="stat-pill">Доод: <b>${fmtMNT(minV)}</b> ${minIdx >= 0 ? "(" + labels[minIdx] + ")" : ""}</span>
+        <span class="stat-pill">Цонх: <b>${chron.length}</b> 7-хоног</span>
+        <span class="stat-pill">Цонхны нийт өөрчлөлт: <b class="chg ${chgClass(pctP)}">${fmtPct(pctP)}</b></span>
+        <span class="stat-pill">Ангилал: <b>${escapeHtml(ubCatOf(pName).label)}</b></span>
       `;
 
       destroyChart("ubTrend");
@@ -1556,7 +2080,7 @@
             backgroundColor: "rgba(56,189,248,.15)",
             fill: true,
             tension: 0.25,
-            pointRadius: 2,
+            pointRadius: chron.length > 40 ? 0 : 2,
             pointHoverRadius: 5,
             borderWidth: 2,
           }],
@@ -1579,7 +2103,6 @@
         },
       });
 
-      // WoW % changes
       const chgLabels = [];
       const chgData = [];
       const chgColors = [];
@@ -1619,40 +2142,317 @@
         },
       });
 
-      renderUbAllTable();
+      // History table (newest first)
+      $("ubHistHint").textContent = pName;
+      const histBody = $("ubHistTable").querySelector("tbody");
+      const histRows = [...weeks]; // newest first
+      histBody.innerHTML = histRows.map((w, i) => {
+        const price = ubData[pCode]?.[w.code] ?? null;
+        const older = weeks[i + 1] ? ubData[pCode]?.[weeks[i + 1].code] ?? null : null;
+        const diff = price != null && older != null ? price - older : null;
+        const pct = pctChange(price, older);
+        const fromPeak = maxV != null && price != null ? price - maxV : null;
+        return `<tr>
+          <td>${escapeHtml(w.name)}</td>
+          <td class="num">${fmtMNT(price)}</td>
+          <td class="num chg ${chgClass(pct)}">${diff == null ? "—" : (diff > 0 ? "+" : "") + fmtNum(diff)}</td>
+          <td class="num chg ${chgClass(pct)}">${fmtPct(pct)}</td>
+          <td class="num">${fromPeak == null ? "—" : (fromPeak > 0 ? "+" : "") + fmtNum(fromPeak)}</td>
+        </tr>`;
+      }).join("");
+
+      renderUbVsAimag(pCode, pName, cur);
     }
 
-    let ubSort = { key: "pct", dir: -1 };
-    function renderUbAllTable() {
-      const w0 = ubWeeks[0]?.code;
-      const w1 = ubWeeks[1]?.code;
-      const q = ($("ubSearch").value || "").trim().toLowerCase();
-      let rows = ubProducts.map((p) => {
-        const price = ubData[p.code]?.[w0] ?? null;
-        const prev = ubData[p.code]?.[w1] ?? null;
-        const diff = price != null && prev != null ? price - prev : null;
-        const pct = pctChange(price, prev);
-        return { name: p.name, price, prev, diff, pct };
+    function renderUbProdGrid(selectedCode) {
+      const rows = filterByUbCat(ubProductRows(), ubActiveCat === "all" ? null : ubActiveCat);
+      // If chip filter via ubChips sets search-like filter, product select drives list of related
+      const qChip = $("ubChips")?.querySelector(".chip.active")?.dataset.q || "";
+      let list = rows;
+      if (qChip) {
+        try {
+          const re = new RegExp(qChip, "i");
+          list = ubProductRows().filter((r) => re.test(r.name));
+        } catch (_) { /* ignore */ }
+      } else if (ubActiveCat !== "all") {
+        list = filterByUbCat(ubProductRows(), ubActiveCat);
+      } else {
+        list = ubProductRows();
+      }
+
+      const box = $("ubProdGrid");
+      if (!box) return;
+      box.innerHTML = list.slice(0, 24).map((r) => `
+        <div class="ub-prod-card${r.code === selectedCode ? " active" : ""}" data-code="${r.code}">
+          <div class="pn">${escapeHtml(r.name)}</div>
+          <div class="pp">${fmtMNT(r.price)}</div>
+          <div class="pm">
+            <span class="chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</span>
+            ${sparkHtml(r.spark)}
+          </div>
+        </div>
+      `).join("");
+      box.querySelectorAll(".ub-prod-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          $("ubProduct").value = card.dataset.code;
+          renderUbDetail();
+        });
       });
+    }
+
+    function renderUbVsAimag(ubCode, pName, ubPrice) {
+      const wrap = $("ubVsAimagWrap");
+      const sh = SHARED.find((s) => s.ub === ubCode);
+      if (!sh || !aimagWeeks.length) {
+        wrap.style.display = "none";
+        return;
+      }
+      wrap.style.display = "";
+      const weekA = aimagWeeks[0]?.code;
+      const weekLabel = aimagWeeks[0]?.name;
+      const weekU = ubWeeks.find((w) => w.name === weekLabel)?.code || ubWeeks[0]?.code;
+      const ubP = ubData[sh.ub]?.[weekU] ?? ubPrice;
+
+      const aimagPrices = AIMAG_CODES.map((c) => ({
+        name: aimagName(c),
+        price: aimagData[sh.aimag]?.[c]?.[weekA] ?? null,
+      })).filter((r) => r.price != null).sort((a, b) => a.price - b.price);
+
+      const avg = mean(aimagPrices.map((r) => r.price));
+      const minR = aimagPrices[0];
+      const maxR = aimagPrices[aimagPrices.length - 1];
+      const vs = pctChange(ubP, avg);
+      // rank among aimags+UB
+      const all = [
+        ...aimagPrices.map((r) => ({ name: r.name, price: r.price, isUb: false })),
+        { name: "Улаанбаатар", price: ubP, isUb: true },
+      ].filter((r) => r.price != null).sort((a, b) => a.price - b.price);
+      const rank = all.findIndex((r) => r.isUb) + 1;
+
+      $("ubVsAimagKpis").innerHTML = `
+        <div class="kpi"><div class="label">УБ үнэ</div><div class="value" style="font-size:1.1rem">${fmtMNT(ubP)}</div></div>
+        <div class="kpi"><div class="label">Аймаг дундаж</div><div class="value" style="font-size:1.1rem">${fmtMNT(avg)}</div></div>
+        <div class="kpi"><div class="label">УБ vs дундаж</div><div class="value chg ${chgClass(vs)}">${fmtPct(vs)}</div></div>
+        <div class="kpi"><div class="label">Зэрэглэл (хямд→үнэтэй)</div><div class="value">${rank || "—"} / ${all.length}</div><div class="sub">хямд: ${minR ? escapeHtml(minR.name) : "—"} · үнэтэй: ${maxR ? escapeHtml(maxR.name) : "—"}</div></div>
+      `;
+
+      // Trend: last 26 weeks UB vs aimag mean
+      const n = Math.min(26, aimagWeeks.length, ubWeeks.length);
+      const chronA = aimagWeeks.slice(0, n).reverse();
+      const labels = chronA.map((w) => w.name);
+      const ubLine = chronA.map((w) => {
+        const uCode = ubWeeks.find((u) => u.name === w.name)?.code;
+        return uCode ? ubData[sh.ub]?.[uCode] ?? null : null;
+      });
+      const aimagLine = chronA.map((w) => {
+        const vals = AIMAG_CODES.map((c) => aimagData[sh.aimag]?.[c]?.[w.code] ?? null);
+        return mean(vals);
+      });
+
+      destroyChart("ubVsAimag");
+      charts.ubVsAimag = new Chart($("ubVsAimagChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Улаанбаатар",
+              data: ubLine,
+              borderColor: "#fbbf24",
+              backgroundColor: "rgba(251,191,36,.12)",
+              fill: false,
+              tension: 0.25,
+              borderWidth: 2.5,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+            },
+            {
+              label: "Аймаг дундаж",
+              data: aimagLine,
+              borderColor: "#38bdf8",
+              backgroundColor: "rgba(56,189,248,.1)",
+              fill: false,
+              tension: 0.25,
+              borderWidth: 2,
+              borderDash: [5, 4],
+              pointRadius: 0,
+              pointHoverRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${fmtMNT(c.raw)}` } },
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 8, font: { size: 9 } }, grid: { display: false } },
+            y: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
+
+      // Rank bar: cheapest 5 + UB + most expensive 5 (unique)
+      const show = [];
+      const take = (arr) => arr.forEach((x) => {
+        if (!show.find((s) => s.name === x.name)) show.push(x);
+      });
+      take(all.slice(0, 5));
+      const ubItem = all.find((x) => x.isUb);
+      if (ubItem) take([ubItem]);
+      take(all.slice(-5));
+      show.sort((a, b) => a.price - b.price);
+
+      destroyChart("ubRank");
+      charts.ubRank = new Chart($("ubRankChart"), {
+        type: "bar",
+        data: {
+          labels: show.map((r) => r.name),
+          datasets: [{
+            data: show.map((r) => r.price),
+            backgroundColor: show.map((r) => (r.isUb ? "#fbbf24" : "#818cf8cc")),
+            borderRadius: 4,
+            maxBarThickness: 18,
+          }],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => fmtMNT(c.raw) } },
+          },
+          scales: {
+            x: {
+              ticks: { callback: (v) => new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v) },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+    }
+
+    function renderUbAllTable() {
+      const q = ($("ubSearch").value || "").trim().toLowerCase();
+      const catId = $("ubTableCat")?.value || "";
+      const sortKey = $("ubTableSort")?.value || "pct";
+
+      let rows = ubProductRows();
+      if (catId) rows = filterByUbCat(rows, catId);
       if (q) rows = rows.filter((r) => r.name.toLowerCase().includes(q));
+
+      const dir = sortKey === "name" ? 1 : -1;
       rows.sort((a, b) => {
-        const ka = a[ubSort.key], kb = b[ubSort.key];
+        const ka = a[sortKey], kb = b[sortKey];
         if (ka == null && kb == null) return 0;
         if (ka == null) return 1;
         if (kb == null) return -1;
-        if (typeof ka === "string") return ka.localeCompare(kb, "mn") * ubSort.dir;
-        return (ka - kb) * ubSort.dir;
+        if (typeof ka === "string") return ka.localeCompare(kb, "mn") * dir;
+        return (ka - kb) * dir;
       });
+
+      const avgPct = mean(rows.map((r) => r.pct));
+      $("ubTablePills").innerHTML = `
+        <span class="stat-pill">Илэрц: <b>${rows.length}</b></span>
+        <span class="stat-pill">Дундаж 7х: <b class="chg ${chgClass(avgPct)}">${fmtPct(avgPct)}</b></span>
+        <span class="stat-pill">Сүүлийн өгөгдөл: <b>${ubWeeks[0]?.name || "—"}</b></span>
+      `;
+
       const tb = $("ubAllTable").querySelector("tbody");
+      const sel = $("ubProduct")?.value;
       tb.innerHTML = rows.map((r) => `
-        <tr>
+        <tr class="clickable${r.code === sel ? " selected" : ""}" data-code="${r.code}">
           <td>${escapeHtml(r.name)}</td>
           <td class="num">${fmtMNT(r.price)}</td>
-          <td class="num">${fmtMNT(r.prev)}</td>
-          <td class="num chg ${chgClass(r.pct)}">${r.diff == null ? "—" : (r.diff > 0 ? "+" : "") + fmtNum(r.diff)}</td>
           <td class="num chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</td>
+          <td class="num chg ${chgClass(r.pct4)}">${fmtPct(r.pct4)}</td>
+          <td class="num chg ${chgClass(r.pct12)}">${fmtPct(r.pct12)}</td>
+          <td>${sparkHtml(r.spark)}</td>
         </tr>
-      `).join("") || `<tr><td colspan="5" class="empty">Илэрц алга</td></tr>`;
+      `).join("") || `<tr><td colspan="6" class="empty">Илэрц алга</td></tr>`;
+
+      tb.querySelectorAll("tr[data-code]").forEach((tr) => {
+        tr.addEventListener("click", () => {
+          $("ubProduct").value = tr.dataset.code;
+          setUbSub("detail");
+        });
+      });
+    }
+
+    function renderUbMulti() {
+      const selected = [...$("ubMultiProducts").selectedOptions].map((o) => o.value);
+      const win = Number($("ubMultiWindow").value) || 26;
+      const mode = $("ubMultiMode").value;
+      if (!selected.length) {
+        destroyChart("ubMulti");
+        return;
+      }
+      const weeks = ubWeeks.slice(0, win);
+      const chron = [...weeks].reverse();
+      const labels = chron.map((w) => w.name);
+      const datasets = selected.map((code, i) => {
+        const name = ubProducts.find((p) => p.code === code)?.name || code;
+        const series = chron.map((w) => ubData[code]?.[w.code] ?? null);
+        const color = CHART_COLORS[i % CHART_COLORS.length];
+        let data = series;
+        if (mode === "index") {
+          const base = series.find((x) => x != null);
+          data = series.map((v) => (v != null && base ? (v / base) * 100 : null));
+        }
+        return {
+          label: shortName(name),
+          data,
+          borderColor: color,
+          backgroundColor: color + "22",
+          tension: 0.25,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+        };
+      });
+
+      destroyChart("ubMulti");
+      charts.ubMulti = new Chart($("ubMultiChart"), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: (c) =>
+                  mode === "index"
+                    ? `${c.dataset.label}: ${c.raw == null ? "—" : c.raw.toFixed(1)}`
+                    : `${c.dataset.label}: ${fmtMNT(c.raw)}`,
+              },
+            },
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 12, font: { size: 10 } }, grid: { display: false } },
+            y: {
+              title: { display: true, text: mode === "index" ? "Индекс (100=эхлэл)" : "Үнэ (₮)" },
+              ticks: {
+                callback: (v) =>
+                  mode === "index"
+                    ? v
+                    : new Intl.NumberFormat("mn-MN", { notation: "compact" }).format(v),
+              },
+              grid: { color: "rgba(42,59,85,.5)" },
+            },
+          },
+        },
+      });
     }
 
     // ─── Aimag panel ──────────────────────────────────────────
@@ -2017,10 +2817,19 @@
     function bindEvents() {
       $("btnRefresh").addEventListener("click", () => init(true));
       $("ovProduct").addEventListener("change", renderOvBar);
-      $("ubApply").addEventListener("click", renderUb);
-      $("ubProduct").addEventListener("change", renderUb);
-      $("ubWindow").addEventListener("change", renderUb);
+      $("ubApply").addEventListener("click", () => renderUbDetail());
+      $("ubProduct").addEventListener("change", () => renderUbDetail());
+      $("ubWindow").addEventListener("change", () => renderUbDetail());
       $("ubSearch").addEventListener("input", renderUbAllTable);
+      $("ubTableCat")?.addEventListener("change", renderUbAllTable);
+      $("ubTableSort")?.addEventListener("change", renderUbAllTable);
+      $("ubMultiApply")?.addEventListener("click", renderUbMulti);
+      $("ubMultiWindow")?.addEventListener("change", renderUbMulti);
+      $("ubMultiMode")?.addEventListener("change", renderUbMulti);
+      $("ubMultiProducts")?.addEventListener("change", renderUbMulti);
+      document.querySelectorAll(".ub-subtab").forEach((tab) => {
+        tab.addEventListener("click", () => setUbSub(tab.dataset.sub));
+      });
       $("aimagApply").addEventListener("click", renderAimag);
       $("aimagProduct").addEventListener("change", renderAimag);
       $("mapApply").addEventListener("click", renderMapPanel);
@@ -2047,9 +2856,14 @@
         renderTrend();
       });
 
-      $("ubAllTable").querySelectorAll("th[data-k]").forEach((th) => {
+      $("ubAllTable")?.querySelectorAll("th[data-k]").forEach((th) => {
         th.addEventListener("click", () => {
           const k = th.dataset.k;
+          if ($("ubTableSort")) {
+            // map header click to sort dropdown
+            const map = { name: "name", price: "price", pct: "pct", pct4: "pct4", pct12: "pct12" };
+            if (map[k]) $("ubTableSort").value = map[k];
+          }
           if (ubSort.key === k) ubSort.dir *= -1;
           else { ubSort.key = k; ubSort.dir = k === "name" ? 1 : -1; }
           renderUbAllTable();
