@@ -6,6 +6,7 @@
   <title>7 хоногийн үнийн дашбоард — ҮСХ 1212.mn</title>
   <meta name="description" content="Хүнсний гол нэр болон бензин түлшний 7 хоногийн дундаж үнэ — Улаанбаатар болон аймгууд. ҮСХ 1212.mn-ийн амьд өгөгдөл." />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -296,6 +297,58 @@
     .aimag-card .name { font-weight: 700; font-size: 0.88rem; }
     .aimag-card .price { font-size: 1.1rem; font-weight: 750; margin: 0.2rem 0; }
     .aimag-card .meta { font-size: 0.72rem; color: var(--muted); }
+
+    /* Map */
+    .map-shell {
+      position: relative;
+      height: min(62vh, 560px);
+      min-height: 360px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0a1220;
+    }
+    .map-shell.tall { height: min(70vh, 640px); min-height: 420px; }
+    #priceMap, #aimagMap {
+      width: 100%; height: 100%;
+      background: #0a1220;
+    }
+    .map-legend-box {
+      position: absolute; z-index: 500; left: 12px; bottom: 12px;
+      background: rgba(15, 23, 42, 0.92); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.55rem 0.7rem; font-size: 0.72rem;
+      color: var(--muted); max-width: 220px; backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+    .map-legend-box strong { color: var(--text); display: block; margin-bottom: 0.25rem; }
+    .map-legend-box .row { display: flex; align-items: center; gap: 0.4rem; margin: 0.18rem 0; }
+    .map-legend-box .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 1.5px solid #fff; flex-shrink: 0;
+    }
+    .leaflet-container { font: inherit; background: #0a1220; }
+    .leaflet-popup-content-wrapper {
+      background: #151f32; color: var(--text);
+      border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .leaflet-popup-tip { background: #151f32; }
+    .leaflet-popup-content { margin: 0.75rem 0.9rem; font-size: 0.84rem; line-height: 1.45; }
+    .leaflet-popup-close-button { color: var(--muted) !important; }
+    .price-popup strong { display: block; font-size: 0.95rem; margin-bottom: 0.15rem; }
+    .price-popup .p-name { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.4rem; }
+    .price-popup .p-big { font-size: 1.25rem; font-weight: 750; margin-bottom: 0.45rem; }
+    .price-popup .p-row {
+      display: flex; justify-content: space-between; gap: 1rem;
+      font-size: 0.78rem; color: var(--muted); padding: 0.12rem 0;
+    }
+    .price-popup .p-row span:last-child { color: var(--text); font-weight: 600; }
+    .map-mode-toggle { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .map-mode-toggle .chip { margin: 0; }
+    table.data tbody tr.hl {
+      background: rgba(56, 189, 248, 0.12) !important;
+      outline: 1px solid rgba(56, 189, 248, 0.35);
+    }
   </style>
 </head>
 <body>
@@ -330,6 +383,7 @@
 
     <div class="tabs" role="tablist">
       <button class="tab active" data-tab="overview">Ерөнхий</button>
+      <button class="tab" data-tab="map">Газрын зураг</button>
       <button class="tab" data-tab="ub">Улаанбаатар</button>
       <button class="tab" data-tab="aimag">Аймгууд</button>
       <button class="tab" data-tab="compare">Харьцуулалт</button>
@@ -380,6 +434,68 @@
         (бүтээгдэхүүний нэр төрөл илүү олон) ·
         Аймгууд — <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0300_010V5.px" target="_blank" rel="noopener">DT_NSO_0300_010V5</a>
         (11 бүтээгдэхүүн). 7 хоног бүр шинэчлэгдэнэ; хуудас нээгдэх бүрт API-аас шууд татна.
+      </div>
+    </section>
+
+    <!-- ═══════ MAP ═══════ -->
+    <section class="panel" id="panel-map">
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн</label>
+          <select id="mapProduct"></select>
+        </div>
+        <div class="field">
+          <label>7 хоног (A — одоо)</label>
+          <select id="mapWeekA"></select>
+        </div>
+        <div class="field">
+          <label>7 хоног (B — өмнөх)</label>
+          <select id="mapWeekB"></select>
+        </div>
+        <div class="field">
+          <label>Өнгөөр харуулах</label>
+          <div class="map-mode-toggle" id="mapModeToggle">
+            <button type="button" class="chip active" data-mode="pct">Өөрчлөлт %</button>
+            <button type="button" class="chip" data-mode="price">Үнийн түвшин</button>
+          </div>
+        </div>
+        <button class="btn primary" id="mapApply">Зурагт харуулах</button>
+      </div>
+      <div class="split-note" id="mapNote">
+        Тойргийн <strong>хэмжээ</strong> = үнийн түвшин · <strong>өнгө</strong> = 7 хоногийн өөрчлөлт
+        (улаан өссөн, ногоон буурсан). Нийтлэг бүтээгдэхүүн сонгоход Улаанбаатар мөн зурагт орно.
+      </div>
+      <div class="kpi-grid" id="mapKpis"></div>
+      <div class="grid-2">
+        <div class="card" style="margin-bottom:0">
+          <h2>Монгол — үнийн газрын зураг <span class="hint" id="mapTitle"></span></h2>
+          <div class="map-shell tall">
+            <div id="priceMap"></div>
+            <div class="map-legend-box" id="mapLegend"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h2>Аймгаар жагсаалт <span class="hint">дарж газрын зурагт тодруулна</span></h2>
+          <div class="table-wrap" style="max-height: min(70vh, 640px)">
+            <table class="data" id="mapTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Бүс</th>
+                  <th class="num">Үнэ A</th>
+                  <th class="num">Үнэ B</th>
+                  <th class="num">%</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="mini-legend">
+            <span class="l-up">Үнэ өссөн</span>
+            <span class="l-down">Үнэ буурсан</span>
+            <span class="l-flat">Өөрчлөлтгүй / мэдээлэлгүй</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -456,6 +572,13 @@
         <button class="btn primary" id="aimagApply">Харуулах</button>
       </div>
       <div class="kpi-grid" id="aimagKpis"></div>
+      <div class="card">
+        <h2>Газрын зураг <span class="hint">тойрог = үнэ · өнгө = өөрчлөлт % · дэлгэрэнгүйг «Газрын зураг» таб</span></h2>
+        <div class="map-shell">
+          <div id="aimagMap"></div>
+          <div class="map-legend-box" id="aimagMapLegend"></div>
+        </div>
+      </div>
       <div class="grid-2">
         <div class="card">
           <h2>Аймгаар үнэ <span class="hint">A 7-хоног</span></h2>
@@ -589,6 +712,7 @@
     </footer>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
   (() => {
     "use strict";
@@ -599,31 +723,33 @@
     const API_UB =
       "https://data.1212.mn/api/v1/mn/NSO/Economy, environment/Consumer Price Index/DT_NSO_0600_001V4.px";
 
-    // 21 aimags only (skip region aggregates 1,2,3,4)
+    // 21 aimags + capital coords (skip region aggregates 1,2,3,4)
     const AIMAGS = {
-      "183": "Баян-Өлгий",
-      "182": "Говь-Алтай",
-      "181": "Завхан",
-      "185": "Увс",
-      "184": "Ховд",
-      "265": "Архангай",
-      "264": "Баянхонгор",
-      "263": "Булган",
-      "261": "Орхон",
-      "262": "Өвөрхангай",
-      "267": "Хөвсгөл",
-      "342": "Говьсүмбэр",
-      "345": "Дархан-Уул",
-      "344": "Дорноговь",
-      "348": "Дундговь",
-      "346": "Өмнөговь",
-      "343": "Сэлэнгэ",
-      "341": "Төв",
-      "421": "Дорнод",
-      "422": "Сүхбаатар",
-      "423": "Хэнтий",
+      "183": { name: "Баян-Өлгий", lat: 48.9683, lng: 89.9687 },
+      "182": { name: "Говь-Алтай", lat: 46.3722, lng: 96.2572 },
+      "181": { name: "Завхан", lat: 47.7417, lng: 96.8444 },
+      "185": { name: "Увс", lat: 49.9811, lng: 92.0667 },
+      "184": { name: "Ховд", lat: 48.0056, lng: 91.6419 },
+      "265": { name: "Архангай", lat: 47.4769, lng: 101.4503 },
+      "264": { name: "Баянхонгор", lat: 46.1944, lng: 100.7181 },
+      "263": { name: "Булган", lat: 48.8125, lng: 103.5347 },
+      "261": { name: "Орхон", lat: 49.0272, lng: 104.0444 },
+      "262": { name: "Өвөрхангай", lat: 46.2667, lng: 102.7778 },
+      "267": { name: "Хөвсгөл", lat: 49.6342, lng: 100.1625 },
+      "342": { name: "Говьсүмбэр", lat: 46.5269, lng: 108.3411 },
+      "345": { name: "Дархан-Уул", lat: 49.4867, lng: 105.9228 },
+      "344": { name: "Дорноговь", lat: 44.8917, lng: 110.1367 },
+      "348": { name: "Дундговь", lat: 45.7625, lng: 106.2708 },
+      "346": { name: "Өмнөговь", lat: 43.5708, lng: 104.4250 },
+      "343": { name: "Сэлэнгэ", lat: 50.2364, lng: 106.2056 },
+      "341": { name: "Төв", lat: 47.7069, lng: 106.9528 },
+      "421": { name: "Дорнод", lat: 48.0725, lng: 114.5328 },
+      "422": { name: "Сүхбаатар", lat: 46.6806, lng: 113.2792 },
+      "423": { name: "Хэнтий", lat: 47.3194, lng: 110.6556 },
+      "511": { name: "Улаанбаатар", lat: 47.9186, lng: 106.9176 },
     };
-    const AIMAG_CODES = Object.keys(AIMAGS);
+    const AIMAG_CODES = Object.keys(AIMAGS).filter((c) => c !== "511");
+    const aimagName = (code) => AIMAGS[code]?.name || code;
 
     /** Shared product mapping: aimag code <-> ub code (approximate name match) */
     const SHARED = [
@@ -656,6 +782,9 @@
     let aimagWeeks = []; // {code,label} newest first
     let ubWeeks = [];
     let charts = {};
+    let mapMode = "pct"; // pct | price
+    const mapInstances = {}; // key -> { map, layer }
+    let mapMarkersByCode = {}; // for highlight
 
     // ─── DOM ──────────────────────────────────────────────────
     const $ = (id) => document.getElementById(id);
@@ -713,6 +842,252 @@
       Chart.defaults.color = "#8fa3bf";
       Chart.defaults.borderColor = "rgba(42,59,85,.8)";
       Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    }
+
+    // ─── Map (Leaflet) ────────────────────────────────────────
+    function ensureMap(key) {
+      if (mapInstances[key]) return mapInstances[key];
+      const elId = key === "main" ? "priceMap" : "aimagMap";
+      const el = $(elId);
+      if (!el || typeof L === "undefined") return null;
+
+      const map = L.map(elId, {
+        center: [46.8, 103.8],
+        zoom: 5.15,
+        zoomSnap: 0.25,
+        minZoom: 4,
+        maxZoom: 10,
+      });
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a> · <a href="https://www.1212.mn">ҮСХ</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(map);
+      const layer = L.layerGroup().addTo(map);
+      mapInstances[key] = { map, layer };
+      // Fix tiles when container was hidden
+      setTimeout(() => map.invalidateSize(), 80);
+      return mapInstances[key];
+    }
+
+    function invalidateMaps() {
+      Object.values(mapInstances).forEach((m) => {
+        try { m.map.invalidateSize(); } catch (_) { /* ignore */ }
+      });
+    }
+
+    function colorForPct(pct) {
+      if (pct == null || Number.isNaN(pct)) return "#475569";
+      if (pct > 0.05) return "#ef4444";
+      if (pct < -0.05) return "#22c55e";
+      return "#94a3b8";
+    }
+
+    function colorForPriceLevel(price, minP, maxP) {
+      if (price == null || Number.isNaN(price) || maxP === minP) return "#38bdf8";
+      const t = (price - minP) / (maxP - minP);
+      // blue (cheap) -> amber -> red (expensive)
+      const r = Math.round(56 + t * (239 - 56));
+      const g = Math.round(189 - t * (189 - 68));
+      const b = Math.round(248 - t * (248 - 68));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function radiusForPrice(price, minP, maxP) {
+      if (price == null || Number.isNaN(price)) return 8;
+      if (maxP === minP) return 14;
+      const t = (price - minP) / (maxP - minP);
+      return 8 + t * 20; // 8–28
+    }
+
+    function setMapLegend(legendEl, mode) {
+      if (!legendEl) return;
+      if (mode === "price") {
+        legendEl.innerHTML = `
+          <strong>Үнийн түвшин</strong>
+          <div class="row"><span class="dot" style="background:#38bdf8"></span> Хямд</div>
+          <div class="row"><span class="dot" style="background:#fbbf24"></span> Дунд</div>
+          <div class="row"><span class="dot" style="background:#ef4444"></span> Үнэтэй</div>
+          <div style="margin-top:0.35rem">Тойргийн хэмжээ = үнэ</div>`;
+      } else {
+        legendEl.innerHTML = `
+          <strong>7 хоногийн өөрчлөлт</strong>
+          <div class="row"><span class="dot" style="background:#ef4444"></span> Өссөн</div>
+          <div class="row"><span class="dot" style="background:#22c55e"></span> Буурсан</div>
+          <div class="row"><span class="dot" style="background:#94a3b8"></span> Өөрчлөлтгүй</div>
+          <div class="row"><span class="dot" style="background:#475569"></span> Мэдээлэлгүй</div>
+          <div style="margin-top:0.35rem">Тойргийн хэмжээ = үнэ</div>`;
+      }
+    }
+
+    /**
+     * rows: { code, name, priceA, priceB, pct }[]
+     * opts: productName, labelA, labelB, mode, legendEl, onSelect
+     */
+    function paintMap(key, rows, opts) {
+      const inst = ensureMap(key);
+      if (!inst) return;
+      const { map, layer } = inst;
+      const mode = opts.mode || "pct";
+      layer.clearLayers();
+      if (key === "main") mapMarkersByCode = {};
+
+      const prices = rows.map((r) => r.priceA).filter((v) => v != null && !Number.isNaN(v));
+      const minP = prices.length ? Math.min(...prices) : 0;
+      const maxP = prices.length ? Math.max(...prices) : 1;
+
+      setMapLegend(opts.legendEl, mode);
+
+      rows.forEach((row) => {
+        const geo = AIMAGS[row.code];
+        if (!geo) return;
+        const color =
+          mode === "price"
+            ? colorForPriceLevel(row.priceA, minP, maxP)
+            : colorForPct(row.pct);
+        const r = radiusForPrice(row.priceA, minP, maxP);
+        const isUb = row.code === "511";
+        const circle = L.circleMarker([geo.lat, geo.lng], {
+          radius: r,
+          color: isUb ? "#fbbf24" : "#fff",
+          weight: isUb ? 2.5 : 1.5,
+          fillColor: color,
+          fillOpacity: 0.88,
+        });
+        const cls = chgClass(row.pct);
+        const html = `
+          <div class="price-popup">
+            <strong>${escapeHtml(row.name)}${isUb ? " ★" : ""}</strong>
+            <div class="p-name">${escapeHtml(opts.productName || "")}</div>
+            <div class="p-big">${fmtMNT(row.priceA)}</div>
+            <div class="p-row"><span>${escapeHtml(opts.labelA || "A")}</span><span>${fmtMNT(row.priceA)}</span></div>
+            <div class="p-row"><span>${escapeHtml(opts.labelB || "B")}</span><span>${fmtMNT(row.priceB)}</span></div>
+            <div class="p-row"><span>Өөрчлөлт</span><span class="chg ${cls}">${fmtPct(row.pct)}</span></div>
+          </div>`;
+        circle.bindPopup(html);
+        circle.on("click", () => {
+          if (typeof opts.onSelect === "function") opts.onSelect(row.code);
+        });
+        circle.addTo(layer);
+        if (key === "main") mapMarkersByCode[row.code] = circle;
+      });
+
+      setTimeout(() => map.invalidateSize(), 60);
+    }
+
+    function buildMapRows(productCode, weekA, weekB, includeUb) {
+      const rows = AIMAG_CODES.map((c) => {
+        const priceA = aimagData[productCode]?.[c]?.[weekA] ?? null;
+        const priceB = aimagData[productCode]?.[c]?.[weekB] ?? null;
+        return {
+          code: c,
+          name: aimagName(c),
+          priceA,
+          priceB,
+          pct: pctChange(priceA, priceB),
+        };
+      });
+
+      if (includeUb) {
+        const sh = SHARED.find((s) => s.aimag === productCode);
+        if (sh) {
+          const labelA = aimagWeeks.find((w) => w.code === weekA)?.name;
+          const labelB = aimagWeeks.find((w) => w.code === weekB)?.name;
+          const uA = ubWeeks.find((w) => w.name === labelA)?.code || ubWeeks[0]?.code;
+          const uB = ubWeeks.find((w) => w.name === labelB)?.code || ubWeeks[1]?.code;
+          const priceA = ubData[sh.ub]?.[uA] ?? null;
+          const priceB = ubData[sh.ub]?.[uB] ?? null;
+          rows.push({
+            code: "511",
+            name: "Улаанбаатар",
+            priceA,
+            priceB,
+            pct: pctChange(priceA, priceB),
+          });
+        }
+      }
+      return rows;
+    }
+
+    function highlightMapTableRow(code) {
+      const tb = $("mapTable")?.querySelector("tbody");
+      if (!tb) return;
+      tb.querySelectorAll("tr").forEach((tr) => {
+        tr.classList.toggle("hl", tr.dataset.code === code);
+      });
+      const tr = tb.querySelector(`tr[data-code="${code}"]`);
+      if (tr) tr.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    function renderMapPanel() {
+      const pCode = $("mapProduct").value || aimagProducts[0]?.code;
+      const wA = $("mapWeekA").value || aimagWeeks[0]?.code;
+      const wB = $("mapWeekB").value || aimagWeeks[1]?.code;
+      const pName = aimagProducts.find((p) => p.code === pCode)?.name || "";
+      const labelA = aimagWeeks.find((w) => w.code === wA)?.name || "A";
+      const labelB = aimagWeeks.find((w) => w.code === wB)?.name || "B";
+      const canUb = SHARED.some((s) => s.aimag === pCode);
+
+      $("mapTitle").textContent = pName + " · " + labelA;
+      $("mapNote").innerHTML = canUb
+        ? `Тойргийн <strong>хэмжээ</strong> = үнийн түвшин · <strong>өнгө</strong> = ${
+            mapMode === "price" ? "үнийн түвшин (хөх→улаан)" : "7 хоногийн өөрчлөлт (улаан өссөн, ногоон буурсан)"
+          }. <strong>Улаанбаатар</strong> (алтан хүрээ) нийтлэг бүтээгдэхүүн дээр харагдана.`
+        : `Тойргийн <strong>хэмжээ</strong> = үнийн түвшин · <strong>өнгө</strong> = ${
+            mapMode === "price" ? "үнийн түвшин" : "7 хоногийн өөрчлөлт"
+          }. Энэ бүтээгдэхүүн зөвхөн аймгийн хүснэгтэд байгаа тул УБ зурагт орохгүй.`;
+
+      const rows = buildMapRows(pCode, wA, wB, true);
+      const valid = rows.filter((r) => r.priceA != null);
+      const avg = mean(valid.filter((r) => r.code !== "511").map((r) => r.priceA));
+      const avgPct = mean(valid.filter((r) => r.code !== "511").map((r) => r.pct));
+      const maxR = [...valid].sort((a, b) => (b.priceA || 0) - (a.priceA || 0))[0];
+      const minR = [...valid].sort((a, b) => (a.priceA || 0) - (b.priceA || 0))[0];
+      const ubRow = rows.find((r) => r.code === "511");
+
+      $("mapKpis").innerHTML = `
+        <div class="kpi"><div class="label">Аймаг дундаж</div><div class="value">${fmtMNT(avg)}</div><div class="sub">${labelA}</div></div>
+        <div class="kpi"><div class="label">Хамгийн үнэтэй</div><div class="value" style="font-size:1rem">${maxR ? escapeHtml(maxR.name) : "—"}</div><div class="sub">${maxR ? fmtMNT(maxR.priceA) : ""}</div></div>
+        <div class="kpi"><div class="label">Хамгийн хямд</div><div class="value" style="font-size:1rem">${minR ? escapeHtml(minR.name) : "—"}</div><div class="sub">${minR ? fmtMNT(minR.priceA) : ""}</div></div>
+        <div class="kpi"><div class="label">Дундаж өөрчлөлт</div><div class="value chg ${chgClass(avgPct)}">${fmtPct(avgPct)}</div><div class="sub">A vs B</div></div>
+        <div class="kpi"><div class="label">Улаанбаатар</div><div class="value" style="font-size:1rem">${ubRow && ubRow.priceA != null ? fmtMNT(ubRow.priceA) : "—"}</div><div class="sub chg ${chgClass(ubRow?.pct)}">${ubRow && ubRow.priceA != null ? fmtPct(ubRow.pct) : canUb ? "" : "нийтлэг биш"}</div></div>
+      `;
+
+      ensureMap("main");
+      paintMap("main", rows, {
+        productName: pName,
+        labelA,
+        labelB,
+        mode: mapMode,
+        legendEl: $("mapLegend"),
+        onSelect: (code) => highlightMapTableRow(code),
+      });
+
+      const sorted = [...rows].filter((r) => r.priceA != null).sort((a, b) => b.priceA - a.priceA);
+      const tb = $("mapTable").querySelector("tbody");
+      tb.innerHTML = sorted.map((r, i) => `
+        <tr data-code="${r.code}" style="cursor:pointer">
+          <td class="rank">${i + 1}</td>
+          <td>${escapeHtml(r.name)}${r.code === "511" ? " ★" : ""}</td>
+          <td class="num">${fmtMNT(r.priceA)}</td>
+          <td class="num">${fmtMNT(r.priceB)}</td>
+          <td class="num chg ${chgClass(r.pct)}">${fmtPct(r.pct)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="empty">Мэдээлэл алга</td></tr>`;
+
+      tb.querySelectorAll("tr[data-code]").forEach((tr) => {
+        tr.addEventListener("click", () => {
+          const code = tr.dataset.code;
+          highlightMapTableRow(code);
+          const marker = mapMarkersByCode[code];
+          if (marker) {
+            marker.openPopup();
+            const inst = mapInstances.main;
+            if (inst) inst.map.panTo(marker.getLatLng(), { animate: true });
+          }
+        });
+      });
     }
 
     // ─── API ──────────────────────────────────────────────────
@@ -876,18 +1251,23 @@
     function setupControls() {
       fillSelect($("ubProduct"), ubProducts, (p) => ({ value: p.code, label: p.name }));
       fillSelect($("aimagProduct"), aimagProducts, (p) => ({ value: p.code, label: p.name }));
+      fillSelect($("mapProduct"), aimagProducts, (p) => ({ value: p.code, label: p.name }));
       fillSelect($("ovProduct"), SHARED, (p) => ({ value: p.key, label: p.label }));
       fillSelect($("cmpProduct"), SHARED, (p) => ({ value: p.key, label: p.label }));
       fillSelect($("aimagWeekA"), aimagWeeks, (w) => ({ value: w.code, label: w.name }));
       fillSelect($("aimagWeekB"), aimagWeeks, (w) => ({ value: w.code, label: w.name }));
+      fillSelect($("mapWeekA"), aimagWeeks, (w) => ({ value: w.code, label: w.name }));
+      fillSelect($("mapWeekB"), aimagWeeks, (w) => ({ value: w.code, label: w.name }));
       fillSelect($("cmpWeek"), aimagWeeks.slice(0, 40), (w) => ({ value: w.code, label: w.name }));
-      fillSelect($("trAimag"), AIMAG_CODES.map((c) => ({ code: c, name: AIMAGS[c] })), (a) => ({
+      fillSelect($("trAimag"), AIMAG_CODES.map((c) => ({ code: c, name: aimagName(c) })), (a) => ({
         value: a.code, label: a.name,
       }));
 
       if (aimagWeeks.length > 1) {
         $("aimagWeekA").value = aimagWeeks[0].code;
         $("aimagWeekB").value = aimagWeeks[1].code;
+        $("mapWeekA").value = aimagWeeks[0].code;
+        $("mapWeekB").value = aimagWeeks[1].code;
       }
 
       // UB chips — quick categories
@@ -951,10 +1331,17 @@
           document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
           tab.classList.add("active");
           $("panel-" + tab.dataset.tab).classList.add("active");
-          // lazy re-render when switching (charts need visible canvas)
+          // lazy re-render when switching (charts/maps need visible container)
           if (tab.dataset.tab === "overview") renderOverview();
+          if (tab.dataset.tab === "map") {
+            renderMapPanel();
+            setTimeout(invalidateMaps, 100);
+          }
           if (tab.dataset.tab === "ub") renderUb();
-          if (tab.dataset.tab === "aimag") renderAimag();
+          if (tab.dataset.tab === "aimag") {
+            renderAimag();
+            setTimeout(invalidateMaps, 100);
+          }
           if (tab.dataset.tab === "compare") renderCompare();
           if (tab.dataset.tab === "trend") renderTrend();
         });
@@ -1033,7 +1420,7 @@
 
       const rows = AIMAG_CODES.map((c) => ({
         code: c,
-        name: AIMAGS[c],
+        name: aimagName(c),
         price: aimagData[sh.aimag]?.[c]?.[week] ?? null,
       })).filter((r) => r.price != null).sort((a, b) => a.price - b.price);
 
@@ -1280,7 +1667,7 @@
         const priceB = aimagData[pCode]?.[c]?.[wB] ?? null;
         const diff = priceA != null && priceB != null ? priceA - priceB : null;
         const pct = pctChange(priceA, priceB);
-        return { code: c, name: AIMAGS[c], priceA, priceB, diff, pct };
+        return { code: c, name: aimagName(c), priceA, priceB, diff, pct };
       });
 
       const valid = rows.filter((r) => r.priceA != null);
@@ -1289,6 +1676,19 @@
       const maxR = [...valid].sort((a, b) => b.priceA - a.priceA)[0];
       const minR = [...valid].sort((a, b) => a.priceA - b.priceA)[0];
       const maxChg = [...valid].filter((r) => r.pct != null).sort((a, b) => b.pct - a.pct)[0];
+
+      // Mini map on aimag tab
+      const pName = aimagProducts.find((p) => p.code === pCode)?.name || "";
+      const labelA = aimagWeeks.find((w) => w.code === wA)?.name || "A";
+      const labelB = aimagWeeks.find((w) => w.code === wB)?.name || "B";
+      ensureMap("aimag");
+      paintMap("aimag", rows, {
+        productName: pName,
+        labelA,
+        labelB,
+        mode: "pct",
+        legendEl: $("aimagMapLegend"),
+      });
 
       $("aimagKpis").innerHTML = `
         <div class="kpi"><div class="label">Аймаг дундаж</div><div class="value">${fmtMNT(avg)}</div><div class="sub">${valid.length} / 21 аймаг</div></div>
@@ -1408,7 +1808,7 @@
         html += `<div class="heat-cell head" title="${escapeHtml(p.name)}">${escapeHtml(shortName(p.name))}</div>`;
       }
       for (const code of AIMAG_CODES) {
-        html += `<div class="heat-cell label">${escapeHtml(AIMAGS[code])}</div>`;
+        html += `<div class="heat-cell label">${escapeHtml(aimagName(code))}</div>`;
         for (const p of products) {
           const v = aimagData[p.code]?.[code]?.[week];
           const { min, max } = scales[p.code];
@@ -1423,7 +1823,7 @@
             bg = `rgba(${r},${g},${b},0.55)`;
             color = "var(--text)";
           }
-          const title = v == null ? "—" : `${AIMAGS[code]} · ${p.name}: ${fmtMNT(v)}`;
+          const title = v == null ? "—" : `${aimagName(code)} · ${p.name}: ${fmtMNT(v)}`;
           html += `<div class="heat-cell" style="background:${bg};color:${color}" title="${escapeHtml(title)}">${v == null ? "—" : fmtNum(v, 0)}</div>`;
         }
       }
@@ -1441,7 +1841,7 @@
 
       const aimagPrices = AIMAG_CODES.map((c) => ({
         code: c,
-        name: AIMAGS[c],
+        name: aimagName(c),
         price: aimagData[sh.aimag]?.[c]?.[weekA] ?? null,
       })).filter((r) => r.price != null).sort((a, b) => a.price - b.price);
 
@@ -1497,7 +1897,7 @@
       const tb = $("cmpTable").querySelector("tbody");
       tb.innerHTML = SHARED.map((s) => {
         const prices = AIMAG_CODES.map((c) => ({
-          name: AIMAGS[c],
+          name: aimagName(c),
           price: aimagData[s.aimag]?.[c]?.[weekA] ?? null,
         })).filter((r) => r.price != null);
         const avg = mean(prices.map((r) => r.price));
@@ -1623,6 +2023,18 @@
       $("ubSearch").addEventListener("input", renderUbAllTable);
       $("aimagApply").addEventListener("click", renderAimag);
       $("aimagProduct").addEventListener("change", renderAimag);
+      $("mapApply").addEventListener("click", renderMapPanel);
+      $("mapProduct").addEventListener("change", renderMapPanel);
+      $("mapWeekA").addEventListener("change", renderMapPanel);
+      $("mapWeekB").addEventListener("change", renderMapPanel);
+      $("mapModeToggle").querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          $("mapModeToggle").querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          mapMode = chip.dataset.mode || "pct";
+          renderMapPanel();
+        });
+      });
       $("cmpApply").addEventListener("click", renderCompare);
       $("cmpProduct").addEventListener("change", renderCompare);
       $("cmpWeek").addEventListener("change", renderCompare);
@@ -1670,10 +2082,12 @@
         // Re-render active panel
         const active = document.querySelector(".tab.active")?.dataset.tab || "overview";
         if (active === "overview") renderOverview();
+        else if (active === "map") renderMapPanel();
         else if (active === "ub") renderUb();
         else if (active === "aimag") renderAimag();
         else if (active === "compare") renderCompare();
         else if (active === "trend") renderTrend();
+        setTimeout(invalidateMaps, 120);
         hideLoading();
       } catch (err) {
         console.error(err);
