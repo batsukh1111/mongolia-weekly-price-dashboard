@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
+  <title>7 хоногийн үнийн дашбоард — ҮСХ 1212.mn</title>
+  <meta name="description" content="Хүнсний гол нэр болон бензин түлшний 7 хоногийн дундаж үнэ — Улаанбаатар болон 21 аймаг. ҮСХ 1212.mn-ийн амьд өгөгдөл." />
+  <meta name="theme-color" content="#07090d" />
+  <meta property="og:title" content="7 хоногийн үнийн дашбоард" />
+  <meta property="og:description" content="ҮСХ 1212.mn — УБ + 21 аймгийн хүнс, шатахууны 7 хоногийн үнэ" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/mongolia-weekly-price-dashboard/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,560;9..144,680&display=swap" rel="stylesheet" />
+  <script type="module" crossorigin src="/mongolia-weekly-price-dashboard/assets/index-CPYcV0b-.js"></script>
+  <link rel="stylesheet" crossorigin href="/mongolia-weekly-price-dashboard/assets/index-DsLobD12.css">
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="loader">
+      <div class="spinner"></div>
+      <div id="loadMsg">1212.mn-ээс өгөгдөл татаж байна…</div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">₮</div>
+      <div>
+        <h1>7 хоногийн <span>үнийн</span> дашбоард</h1>
+        <p>Хүнс · шатахуун · УБ + 21 аймаг</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge live">● Амьд өгөгдөл</span>
+      <span class="badge src">ҮСХ · 1212.mn</span>
+    </div>
+    <div class="search-wrap">
+      <label class="sr-only" for="globalSearch">Бүтээгдэхүүн хайх</label>
+      <input type="search" id="globalSearch" placeholder="Мах, гурил, бензин…" autocomplete="off" />
+      <div class="search-results" id="searchResults" hidden></div>
+    </div>
+    <div class="header-meta">
+      <span id="lastUpdated">Сүүлийн өгөгдөл: —</span>
+      <div class="dl-wrap" id="dlWrap">
+        <button class="btn dl-btn" id="btnDlMenu" type="button" title="Excel / CSV татах" disabled>
+          ⬇ Excel
+        </button>
+        <div class="dl-menu" id="dlMenu" role="menu">
+          <div class="dl-hint">Нэвтрэх шаардлагагүй · одоогийн амьд өгөгдөл</div>
+          <button type="button" data-export="full-xlsx">Бүх өгөгдөл (Excel)</button>
+          <button type="button" data-export="ub-xlsx">Зөвхөн Улаанбаатар</button>
+          <button type="button" data-export="aimag-xlsx">Зөвхөн аймгууд</button>
+          <div class="dl-sep"></div>
+          <button type="button" data-export="full-csv">CSV — УБ + аймаг</button>
+          <button type="button" data-export="ub-csv">CSV — Улаанбаатар</button>
+          <button type="button" data-export="aimag-csv">CSV — Аймгууд</button>
+          <div class="dl-sep"></div>
+          <button type="button" data-export="current">Одоогийн харагдац</button>
+        </div>
+      </div>
+      <button class="btn" id="btnRefresh" title="Дахин татах">↻ Шинэчлэх</button>
+      <a class="src-link" href="https://www.1212.mn" target="_blank" rel="noopener">Эх сурвалж</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="hero">
+      <p class="eyebrow">7 хоногийн тойм</p>
+      <p class="briefing-meta" id="briefingMeta"></p>
+      <p class="briefing-text" id="briefingText">1212.mn-ээс амьд өгөгдөл татаж, энэ 7 хоногийн зургийг бэлдэж байна…</p>
+    </section>
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="overview">Ерөнхий</button>
+      <button class="tab" data-tab="map">Газрын зураг</button>
+      <button class="tab" data-tab="ub">Улаанбаатар</button>
+      <button class="tab" data-tab="aimag">Аймгууд</button>
+      <button class="tab" data-tab="compare">Харьцуулалт</button>
+      <button class="tab" data-tab="trend">Чиг хандлага</button>
+    </div>
+
+    <!-- ═══════ OVERVIEW ═══════ -->
+    <section class="panel active" id="panel-overview">
+      <div class="kpi-grid" id="overviewKpis"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Хамгийн их өөрчлөлт (УБ, 7 хоног) <span class="hint">өмнөх 7 хоногтой харьцуулсан</span></h2>
+          <div class="table-wrap table-h-md">
+            <table class="data" id="ovTopChgTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Бүтээгдэхүүн</th>
+                  <th class="num">Үнэ</th>
+                  <th class="num">Өөрчлөлт</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Аймгуудын дундаж vs УБ <span class="hint" id="ovSharedProductHint">нийтлэг бүтээгдэхүүн</span></h2>
+          <div class="controls" style="margin-bottom:.6rem">
+            <div class="field">
+              <label>Бүтээгдэхүүн (нийтлэг)</label>
+              <select id="ovProduct"></select>
+            </div>
+          </div>
+          <div class="chart-box sm"><canvas id="ovBarChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>УБ — үнийн түвшин (сүүлийн долоо хоног)</h2>
+        <div class="chart-box"><canvas id="ovUbPrices"></canvas></div>
+      </div>
+
+      <div class="split-note">
+        <strong>Өгөгдлийн эх:</strong>
+        Улаанбаатар — <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_001V4.px" target="_blank" rel="noopener">DT_NSO_0600_001V4</a>
+        (бүтээгдэхүүний нэр төрөл илүү олон) ·
+        Аймгууд — <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0300_010V5.px" target="_blank" rel="noopener">DT_NSO_0300_010V5</a>
+        (11 бүтээгдэхүүн). 7 хоног бүр шинэчлэгдэнэ; хуудас нээгдэх бүрт API-аас шууд татна.
+      </div>
+    </section>
+
+    <!-- ═══════ MAP ═══════ -->
+    <section class="panel" id="panel-map">
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн</label>
+          <select id="mapProduct"></select>
+        </div>
+        <div class="field">
+          <label>7 хоног (A — одоо)</label>
+          <select id="mapWeekA"></select>
+        </div>
+        <div class="field">
+          <label>7 хоног (B — өмнөх)</label>
+          <select id="mapWeekB"></select>
+        </div>
+        <div class="field">
+          <label>Өнгөөр харуулах</label>
+          <div class="map-mode-toggle" id="mapModeToggle">
+            <button type="button" class="chip active" data-mode="pct">Өөрчлөлт %</button>
+            <button type="button" class="chip" data-mode="price">Үнийн түвшин</button>
+          </div>
+        </div>
+        <button class="btn primary" id="mapApply">Зурагт харуулах</button>
+      </div>
+      <div class="split-note" id="mapNote">
+        Тойргийн <strong>хэмжээ</strong> = үнийн түвшин · <strong>өнгө</strong> = 7 хоногийн өөрчлөлт
+        (улаан өссөн, ногоон буурсан). Нийтлэг бүтээгдэхүүн сонгоход Улаанбаатар мөн зурагт орно.
+      </div>
+      <div class="kpi-grid" id="mapKpis"></div>
+      <div class="grid-2">
+        <div class="card" style="margin-bottom:0">
+          <h2>Монгол — үнийн газрын зураг <span class="hint" id="mapTitle"></span></h2>
+          <div class="map-shell tall">
+            <div id="priceMap"></div>
+            <div class="map-legend-box" id="mapLegend"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h2>Аймгаар жагсаалт <span class="hint">дарж газрын зурагт тодруулна</span></h2>
+          <div class="table-wrap map-side-table">
+            <table class="data" id="mapTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Бүс</th>
+                  <th class="num">Үнэ A</th>
+                  <th class="num">Үнэ B</th>
+                  <th class="num">%</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="mini-legend">
+            <span class="l-up">Үнэ өссөн</span>
+            <span class="l-down">Үнэ буурсан</span>
+            <span class="l-flat">Өөрчлөлтгүй / мэдээлэлгүй</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ UB ═══════ -->
+    <section class="panel" id="panel-ub">
+      <div class="split-note">
+        <strong>Нийслэл — дэлгэрэнгүй жагсаалт.</strong>
+        Улаанбаатарт бүтээгдэхүүний нэр төрөл аймгаас илүү олон (гурил 3 зэрэг, талх, мах, цагаан идээ, ногоо, шатахуун…).
+        Эх: <a href="https://www.1212.mn/mn/statcate/table-view/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_001V4.px" target="_blank" rel="noopener">DT_NSO_0600_001V4</a>
+        · 7 хоног бүр шинэчлэгдэнэ.
+      </div>
+
+      <div class="ub-subtabs" id="ubSubtabs">
+        <button type="button" class="ub-subtab active" data-sub="dash">Ерөнхий самбар</button>
+        <button type="button" class="ub-subtab" data-sub="detail">Бүтээгдэхүүний дэлгэрэнгүй</button>
+        <button type="button" class="ub-subtab" data-sub="table">Бүх жагсаалт</button>
+        <button type="button" class="ub-subtab" data-sub="multi">Олон бүтээгдэхүүн</button>
+      </div>
+
+      <!-- UB sub: dashboard -->
+      <div class="ub-sub active" id="ubSub-dash">
+        <div class="kpi-grid" id="ubDashKpis"></div>
+        <div class="ub-cat-grid" id="ubCatGrid"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Хамгийн их өссөн (7 хоног) <span class="hint">топ 8</span></h2>
+            <div class="table-wrap table-h-sm">
+              <table class="data" id="ubTopUpTable">
+                <thead><tr><th>#</th><th>Бүтээгдэхүүн</th><th class="num">Үнэ</th><th class="num">%</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Хамгийн их буурсан (7 хоног) <span class="hint">топ 8</span></h2>
+            <div class="table-wrap table-h-sm">
+              <table class="data" id="ubTopDownTable">
+                <thead><tr><th>#</th><th>Бүтээгдэхүүн</th><th class="num">Үнэ</th><th class="num">%</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Ангиллын үнийн түвшин <span class="hint" id="ubCatChartHint">сонгосон ангилал</span></h2>
+          <div class="chart-box lg"><canvas id="ubCatChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Ангиллаар дундаж өөрчлөлт (%) <span class="hint">7 хоног</span></h2>
+          <div class="chart-box sm"><canvas id="ubCatChgChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- UB sub: product detail -->
+      <div class="ub-sub" id="ubSub-detail">
+        <div class="controls">
+          <div class="field" style="flex:2">
+            <label>Бүтээгдэхүүн</label>
+            <select id="ubProduct"></select>
+          </div>
+          <div class="field">
+            <label>Хугацааны цонх</label>
+            <select id="ubWindow">
+              <option value="12">Сүүлийн 12 7-хоног</option>
+              <option value="26" selected>Сүүлийн 26 7-хоног (~6 сар)</option>
+              <option value="52">Сүүлийн 52 7-хоног (~жил)</option>
+              <option value="all">Бүх (ачаалсан)</option>
+            </select>
+          </div>
+          <button class="btn primary" id="ubApply">Харуулах</button>
+        </div>
+        <div class="chip-row" id="ubChips"></div>
+        <div class="ub-prod-grid" id="ubProdGrid"></div>
+        <div class="kpi-grid" id="ubKpis"></div>
+        <div class="stat-pills" id="ubStatPills"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Үнийн чиг хандлага <span class="hint" id="ubChartTitle"></span></h2>
+            <div class="chart-box lg"><canvas id="ubTrendChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h2>7 хоногийн өөрчлөлт (%)</h2>
+            <div class="chart-box lg"><canvas id="ubChgChart"></canvas></div>
+          </div>
+        </div>
+        <div class="grid-2" id="ubVsAimagWrap" style="display:none">
+          <div class="card">
+            <h2>УБ vs аймгийн дундаж <span class="hint">нийтлэг бүтээгдэхүүн</span></h2>
+            <div class="chart-box"><canvas id="ubVsAimagChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h2>УБ-ийн байршил <span class="hint">аймгуудын дунд</span></h2>
+            <div class="kpi-grid" id="ubVsAimagKpis" style="margin:0"></div>
+            <div class="chart-box sm"><canvas id="ubRankChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Долоо хоногийн түүх
+            <span class="hint" id="ubHistHint"></span>
+            <button type="button" class="btn sm dl-btn" id="btnDlUbHist">⬇ Excel</button>
+          </h2>
+          <div class="table-wrap table-h-md">
+            <table class="data" id="ubHistTable">
+              <thead>
+                <tr>
+                  <th>Огноо</th>
+                  <th class="num">Үнэ (₮)</th>
+                  <th class="num">Өмнөхөөс</th>
+                  <th class="num">%</th>
+                  <th class="num">Цонхны оргилоос</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- UB sub: full table -->
+      <div class="ub-sub" id="ubSub-table">
+        <div class="controls">
+          <div class="field" style="flex:1.2">
+            <label>Хайх</label>
+            <input type="search" id="ubSearch" placeholder="жнь: мах, гурил, бензин, төмс…" />
+          </div>
+          <div class="field">
+            <label>Ангилал</label>
+            <select id="ubTableCat">
+              <option value="">Бүгд</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Эрэмбэ</label>
+            <select id="ubTableSort">
+              <option value="pct">7 хоногийн %</option>
+              <option value="pct4">4 7-хоногийн %</option>
+              <option value="pct12">12 7-хоногийн %</option>
+              <option value="price">Үнэ (өндөр→бага)</option>
+              <option value="name">Нэр (А→Я)</option>
+            </select>
+          </div>
+        </div>
+        <div class="stat-pills" id="ubTablePills"></div>
+        <div class="card">
+          <h2>Бүх бүтээгдэхүүн — олон хугацааны харьцуулалт
+            <span class="hint">мөр дээр дарж дэлгэрэнгүй рүү ·
+              <button type="button" class="btn sm dl-btn" id="btnDlUbTable">⬇ Excel</button>
+            </span>
+          </h2>
+          <div class="table-wrap table-h-lg">
+            <table class="data" id="ubAllTable">
+              <thead>
+                <tr>
+                  <th data-k="name">Бүтээгдэхүүн</th>
+                  <th class="num" data-k="price">Үнэ</th>
+                  <th class="num" data-k="pct">7 хоног %</th>
+                  <th class="num" data-k="pct4">4×7х %</th>
+                  <th class="num" data-k="pct12">12×7х %</th>
+                  <th data-k="price">Чиглэл</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="mini-legend">
+            <span class="l-up">Өссөн</span>
+            <span class="l-down">Буурсан</span>
+            <span class="l-flat">Бараг өөрчлөгдөөгүй</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- UB sub: multi product compare -->
+      <div class="ub-sub" id="ubSub-multi">
+        <div class="controls">
+          <div class="field" style="flex:2">
+            <label>Бүтээгдэхүүнүүд (Ctrl/Cmd — олон сонгох)</label>
+            <select id="ubMultiProducts" multiple size="8" style="min-height:160px"></select>
+          </div>
+          <div class="field">
+            <label>Цонх</label>
+            <select id="ubMultiWindow">
+              <option value="12">12 7-хоног</option>
+              <option value="26" selected>26 7-хоног</option>
+              <option value="52">52 7-хоног</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Харуулах</label>
+            <select id="ubMultiMode">
+              <option value="index" selected>Индекс (эхлэл=100)</option>
+              <option value="price">Нэрлэсэн үнэ (₮)</option>
+            </select>
+          </div>
+          <button class="btn primary" id="ubMultiApply">Зурах</button>
+        </div>
+        <div class="chip-row" id="ubMultiChips"></div>
+        <div class="card">
+          <h2>Олон бүтээгдэхүүний харьцуулалт <span class="hint">ижил масштабд харьцуулахдаа индекс ашиглана</span></h2>
+          <div class="chart-box lg"><canvas id="ubMultiChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ AIMAG ═══════ -->
+    <section class="panel" id="panel-aimag">
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн</label>
+          <select id="aimagProduct"></select>
+        </div>
+        <div class="field">
+          <label>Харьцуулах 7 хоног (A)</label>
+          <select id="aimagWeekA"></select>
+        </div>
+        <div class="field">
+          <label>Харьцуулах 7 хоног (B — өмнөх)</label>
+          <select id="aimagWeekB"></select>
+        </div>
+        <button class="btn primary" id="aimagApply">Харуулах</button>
+      </div>
+      <div class="kpi-grid" id="aimagKpis"></div>
+      <div class="card">
+        <h2>Газрын зураг <span class="hint">тойрог = үнэ · өнгө = өөрчлөлт % · дэлгэрэнгүйг «Газрын зураг» таб</span></h2>
+        <div class="map-shell">
+          <div id="aimagMap"></div>
+          <div class="map-legend-box" id="aimagMapLegend"></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Аймгаар үнэ <span class="hint">A 7-хоног</span></h2>
+          <div class="chart-box lg"><canvas id="aimagBarChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Өөрчлөлт (%) <span class="hint">A vs B</span></h2>
+          <div class="chart-box lg"><canvas id="aimagChgChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Аймгуудын жагсаалт
+          <button type="button" class="btn sm dl-btn" id="btnDlAimag">⬇ Excel</button>
+        </h2>
+        <div class="table-wrap">
+          <table class="data" id="aimagTable">
+            <thead>
+              <tr>
+                <th data-k="rank">#</th>
+                <th data-k="name">Аймаг</th>
+                <th class="num" data-k="priceA">Үнэ A</th>
+                <th class="num" data-k="priceB">Үнэ B</th>
+                <th class="num" data-k="diff">Зөрүү</th>
+                <th class="num" data-k="pct">%</th>
+                <th data-k="priceA">Түвшин</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="mini-legend">
+          <span class="l-up">Үнэ өссөн</span>
+          <span class="l-down">Үнэ буурсан</span>
+          <span class="l-flat">Бараг өөрчлөгдөөгүй</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Дулаан зураг — бүх бүтээгдэхүүн × аймаг (сүүлийн 7 хоног, ₮)</h2>
+        <div id="heatMap" class="heat-grid"></div>
+      </div>
+    </section>
+
+    <!-- ═══════ COMPARE ═══════ -->
+    <section class="panel" id="panel-compare">
+      <div class="split-note">
+        Аймгуудын хүснэгтэд бүтээгдэхүүний төрөл цөөн (11), УБ-д илүү олон (30+).
+        Доор зөвхөн <strong>хоёр эх сурвалжид нийтлэг</strong> байгаа бүтээгдэхүүнүүдийг харьцуулна.
+        УБ-ыг «нийслэл» гэж, аймгуудын дундаж/мин/макс-тай зэрэгцүүлнэ.
+      </div>
+      <div class="controls">
+        <div class="field" style="flex:2">
+          <label>Нийтлэг бүтээгдэхүүн</label>
+          <select id="cmpProduct"></select>
+        </div>
+        <div class="field">
+          <label>7 хоног</label>
+          <select id="cmpWeek"></select>
+        </div>
+        <button class="btn primary" id="cmpApply">Харьцуулах</button>
+      </div>
+      <div class="kpi-grid" id="cmpKpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>УБ vs аймгууд</h2>
+          <div class="chart-box lg"><canvas id="cmpChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>УБ харьцуулалт — нийтлэг бүтээгдэхүүнүүд
+            <button type="button" class="btn sm dl-btn" id="btnDlCompare">⬇ Excel</button>
+          </h2>
+          <div class="table-wrap">
+            <table class="data" id="cmpTable">
+              <thead>
+                <tr>
+                  <th>Бүтээгдэхүүн</th>
+                  <th class="num">УБ</th>
+                  <th class="num">Аймаг дундаж</th>
+                  <th class="num">Зөрүү %</th>
+                  <th class="num">Хамгийн хямд</th>
+                  <th class="num">Хамгийн үнэтэй</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ TREND ═══════ -->
+    <section class="panel" id="panel-trend">
+      <div class="controls">
+        <div class="field">
+          <label>Эх сурвалж</label>
+          <select id="trSource">
+            <option value="ub">Улаанбаатар</option>
+            <option value="aimag">Аймгууд (нэг аймаг)</option>
+          </select>
+        </div>
+        <div class="field" id="trAimagField" style="display:none">
+          <label>Аймаг</label>
+          <select id="trAimag"></select>
+        </div>
+        <div class="field" style="flex:2">
+          <label>Бүтээгдэхүүн (олон сонгох — Ctrl/Cmd)</label>
+          <select id="trProducts" multiple size="6" style="min-height:120px"></select>
+        </div>
+        <div class="field">
+          <label>Цонх</label>
+          <select id="trWindow">
+            <option value="26" selected>26 7-хоног</option>
+            <option value="52">52 7-хоног</option>
+            <option value="all">Бүх</option>
+          </select>
+        </div>
+        <button class="btn primary" id="trApply">Зурах</button>
+      </div>
+      <div class="card">
+        <h2>Олон бүтээгдэхүүний чиг хандлага <span class="hint">индекс: эхний цэг = 100</span></h2>
+        <div class="chart-box lg"><canvas id="trIndexChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Нэрлэсэн үнэ (₮)</h2>
+        <div class="chart-box lg"><canvas id="trPriceChart"></canvas></div>
+      </div>
+    </section>
+
+    <footer>
+      <div>
+        Өгөгдөл: Үндэсний статистикийн хороо —
+        <a href="https://data.1212.mn/" target="_blank" rel="noopener">PxWeb API</a>.
+        Хуудас нээгдэх / «Шинэчлэх» дарах бүрт шууд API-аас татна — 1212.mn шинэчлэгдэхэд дашбоард автоматаар дагана.
+      </div>
+      <div>Vite · Chart.js · Leaflet · Excel таталт · GitHub Pages</div>
+    </footer>
+  </div>
+
+
+</body>
+</html>

@@ -46,9 +46,14 @@ npm run preview  # built файлыг шалгах
 
 ## GitHub Pages
 
-`main` руу push хийхэд GitHub Actions `dist/`-ийг Pages дээр байрлуулна.
+Production файл `docs/` дотор байна. Шинэчлэхдээ:
 
-Репозитори → **Settings** → **Pages** → **Source**: GitHub Actions.
+```bash
+npm run build
+# Windows: docs хавтсыг dist-ээс дахин хуулна
+```
+
+Репозитори → **Settings** → **Pages** → **Source**: Deploy from a branch → `main` / `/docs`.
 
 ## Файлын бүтэц
 
