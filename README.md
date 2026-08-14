@@ -46,14 +46,14 @@ npm run preview  # built файлыг шалгах
 
 ## GitHub Pages
 
-Production файл `docs/` дотор байна. Шинэчлэхдээ:
+`main` салбарын язгуур (`/`) дээрх бэлэн файлыг нийтэлнэ.
 
 ```bash
-npm run build
-# Windows: docs хавтсыг dist-ээс дахин хуулна
+npm run pages
+git add index.html assets docs favicon.svg .nojekyll
+git commit -m "Pages build шинэчлэх"
+git push
 ```
-
-Репозитори → **Settings** → **Pages** → **Source**: Deploy from a branch → `main` / `/docs`.
 
 ## Файлын бүтэц
 
