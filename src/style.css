@@ -114,6 +114,12 @@ header.app-header {
   color: #f0d09a;
   border-color: rgba(232, 184, 109, 0.28);
 }
+.badge.ver {
+  background: #e8b86d;
+  color: #1a1308;
+  border-color: #e8b86d;
+  letter-spacing: 0.04em;
+}
 
 .search-wrap {
   position: relative;
